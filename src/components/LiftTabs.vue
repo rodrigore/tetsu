@@ -2,13 +2,14 @@
 import { useApp } from '../stores/app'
 import { useUi } from '../stores/ui'
 import { messages } from '../core/i18n'
+import { vDragScroll } from '../core/dragScroll'
 
 const app = useApp()
 const ui = useUi()
 </script>
 
 <template>
-  <div class="tabs hide-scroll">
+  <div v-drag-scroll class="tabs hide-scroll">
     <button
       v-for="l in app.s.lifts"
       :key="l.id"

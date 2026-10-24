@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { vDragScroll } from '../core/dragScroll'
+
 defineProps<{ chips: { id: string; label: string; unit: string; count: number }[]; empty: boolean; emptyText: string }>()
 </script>
 
 <template>
-  <div class="chips hide-scroll">
+  <div v-drag-scroll class="chips hide-scroll">
     <span v-if="empty" class="chip">{{ emptyText }}</span>
     <span v-for="c in chips" :key="c.id" class="chip">
       <span>{{ c.label }}</span>
