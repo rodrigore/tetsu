@@ -3,10 +3,15 @@ import { computed, ref, watch } from 'vue'
 import { useApp } from '../stores/app'
 import { fmt } from '../core/format'
 import { messages } from '../core/i18n'
-import { parseNumber } from '../core/units'
+import { fromKg, parseNumber } from '../core/units'
 
 const app = useApp()
 const t = computed(() => messages(app.s.lang))
+
+// Weight the percentage stands for, always visible whatever the style or mode.
+const targetText = computed(
+  () => `${fmt(fromKg((app.lift.kg * app.s.pct) / 100, app.s.unit), app.s.lang)} ${app.s.unit.toUpperCase()}`,
+)
 
 const raw = ref<string | null>(null)
 watch(() => app.s.lang, () => (raw.value = null))
@@ -48,6 +53,7 @@ function onInput(e: Event) {
         </button>
       </div>
     </div>
+    <div class="tgt" aria-live="polite">= {{ targetText }}</div>
     <input
       class="dial"
       type="range"
@@ -129,9 +135,17 @@ function onInput(e: Event) {
   align-items: center;
   justify-content: center;
 }
+.tgt {
+  margin-top: 6px;
+  font-size: calc(20px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  line-height: 1;
+}
 .dial {
   width: 100%;
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   height: 44px;
   accent-color: var(--accent);
 }
