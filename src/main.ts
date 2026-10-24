@@ -7,5 +7,7 @@ import '@fontsource/barlow-condensed/700.css'
 import './styles/tokens.css'
 import './styles/base.css'
 import App from './App.vue'
+import { registerUpdates } from './core/registerUpdates'
 
 createApp(App).use(createPinia()).mount('#app')
+registerUpdates()
