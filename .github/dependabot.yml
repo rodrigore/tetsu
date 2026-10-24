@@ -4,6 +4,16 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # vue-tsc does not support TypeScript 7 yet
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      # keep in step with the Node version used in CI (22)
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
   - package-ecosystem: github-actions
     directory: /
     schedule:
