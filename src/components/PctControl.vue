@@ -90,9 +90,14 @@ function onInput(e: Event) {
   align-items: center;
   gap: 4px;
   line-height: 1;
+  flex: 1;
+  min-width: 0;
+  margin-right: 8px;
 }
 .field {
+  flex: 0 1 124px;
   width: 124px;
+  min-width: 48px;
   height: 46px;
   padding: 0;
   background: transparent;
@@ -111,6 +116,7 @@ function onInput(e: Event) {
 .of {
   margin-left: 6px;
   white-space: nowrap;
+  flex: none;
   font-size: calc(14px * var(--ts));
   font-weight: 600;
   letter-spacing: 0.16em;

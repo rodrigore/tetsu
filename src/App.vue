@@ -77,7 +77,15 @@ const full = computed(() => app.s.look === 'full')
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+@media (orientation: portrait) and (max-height: 780px) {
+  .screen {
+    gap: 8px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
 }
 .screen > :deep(*) {
   flex: none;

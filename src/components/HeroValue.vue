@@ -9,9 +9,10 @@ const props = defineProps<{
 const app = useApp()
 
 const landscape = useMq(LANDSCAPE_PHONE)
+const short = useMq('(orientation: portrait) and (max-height: 780px)')
 const full = computed(() => app.s.look === 'full')
 const both = computed(() => props.hero.side && props.hero.other !== '')
-const base = computed(() => (landscape.value ? 48 : full.value ? 64 : 76))
+const base = computed(() => (landscape.value ? 48 : short.value ? (full.value ? 56 : 64) : full.value ? 64 : 76))
 const room = computed(() => (landscape.value ? 200 : 232))
 // Keep "main / other" on one line: shrink only when both numbers together would overflow.
 const fit = computed(() => {

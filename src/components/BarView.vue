@@ -32,7 +32,10 @@ const dims = computed(() =>
   props.looks.map((l, i) => {
     if (!horiz.value) return { w: l.w, fs: l.fs }
     const fsH = l.h >= 100 ? 18 : l.h >= 70 ? 16 : 14
-    return { w: Math.max(l.w, Math.round(props.used[i]!.label.length * fsH * 0.52 + 10)), fs: fsH }
+    // The unit sits under the number, so the plate is as wide as the wider of the two.
+    const num = props.used[i]!.label.length * fsH * 0.52
+    const unit = 2 * Math.round(fsH * 0.6) * 0.62
+    return { w: Math.max(l.w, Math.round(Math.max(num, unit) + 10)), fs: fsH }
   }),
 )
 const fit = computed(() => {
@@ -77,7 +80,7 @@ const legend = computed(() => {
             class="label"
             :class="{ vertical: !horiz }"
             :style="{ fontSize: Math.max(8, Math.round(dims[i]!.fs * Math.max(fit, 0.65))) + 'px' }"
-          >{{ p.label }}</span>
+          >{{ p.label }}<small v-if="horiz" class="unit">{{ p.unit.toUpperCase() }}</small><small v-else class="unit"> {{ p.unit.toUpperCase() }}</small></span>
         </button>
       </div>
       <div v-if="used.length === 0" class="empty">{{ t.emptyBar }}</div>
@@ -100,14 +103,14 @@ const legend = computed(() => {
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  min-height: 0;
+  gap: 8px;
+  min-height: 160px;
   flex: 1;
 }
 .bar {
   position: relative;
   flex: 1;
-  min-height: 140px;
+  min-height: 110px;
   margin: 0 calc(-1 * var(--pad, 24px));
 }
 .rod {
@@ -155,6 +158,23 @@ const legend = computed(() => {
   letter-spacing: 0.04em;
   pointer-events: none;
   white-space: nowrap;
+}
+.label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.label.vertical {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0;
+}
+.unit {
+  font-size: 0.62em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
 }
 .label.vertical {
   writing-mode: vertical-rl;

@@ -56,6 +56,8 @@ export interface Settings {
   presets: Preset[]
   presetId: string | null
   guideDone: boolean
+  /** Bumped when a default changes in a way existing installs should pick up once. */
+  schema: number
 }
 
 const KEY = 'tetsu:v1'
@@ -65,7 +67,7 @@ const defaults = (): Settings => ({
   unit: 'kg',
   theme: 'dark',
   accent: '#FF5A1F',
-  look: 'full',
+  look: 'minimal',
   hero: 'side',
   side: 'both',
   round: 'near',
@@ -107,6 +109,7 @@ const defaults = (): Settings => ({
   ],
   presetId: null,
   guideDone: false,
+  schema: 2,
 })
 
 function load(): Settings {
@@ -118,7 +121,13 @@ function load(): Settings {
       // Factory presets always come from the app, so improvements reach existing installs;
       // the ones the user saved are kept as they are.
       const own = (saved.presets ?? []).filter((p) => !p.seed)
-      return { ...base, ...saved, presets: [...base.presets, ...own] }
+      const merged = { ...base, ...saved, presets: [...base.presets, ...own] }
+      // v2: the minimal view became the default. Applied once, then your own choice sticks.
+      if ((saved.schema ?? 1) < 2) {
+        merged.look = 'minimal'
+        merged.schema = 2
+      }
+      return merged
     }
   } catch {
     /* storage blocked or corrupt: start from defaults */
