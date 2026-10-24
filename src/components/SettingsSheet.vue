@@ -4,12 +4,13 @@ import { useApp, type Settings } from '../stores/app'
 import { useUi } from '../stores/ui'
 import { messages } from '../core/i18n'
 import { PALETTES } from '../core/palette'
-import { fmt } from '../core/format'
+import { fmt, fmtW } from '../core/format'
 import { toKg, parseNumber, type Unit } from '../core/units'
 import Sheet from './Sheet.vue'
 import Section from './Section.vue'
 import Seg from './Seg.vue'
 import AddRow from './AddRow.vue'
+import PresetsSection from './PresetsSection.vue'
 
 const app = useApp()
 const ui = useUi()
@@ -22,7 +23,7 @@ const tabs = computed(() => [
   { value: 'general' as const, label: t.value.tabGeneral },
 ])
 
-const barText = (b: { value: number; unit: string }) => `${fmt(b.value, s.lang)} ${b.unit.toUpperCase()}`
+const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, s.lang)} ${b.unit.toUpperCase()}`
 
 function addBar(value: number, unit: Unit) {
   const kg = toKg(value, unit)
@@ -53,6 +54,7 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
     <Seg v-model="ui.tab.settings" :options="tabs" />
 
     <template v-if="ui.tab.settings === 'display'">
+      <PresetsSection />
       <Section :title="t.sideShown">
         <Seg
           :model-value="s.side"
@@ -103,6 +105,9 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
       <Section :title="t.plateColors" :hint="t.pcolHint">
         <Seg :model-value="s.olympic" :options="[{ value: false, label: t.byUnit }, { value: true, label: t.olympic }]" @update:model-value="set('olympic')($event)" />
       </Section>
+      <Section :title="t.oneHandTitle" :hint="t.oneHandHint">
+        <Seg :model-value="s.oneHand" :options="[{ value: false, label: t.no }, { value: true, label: t.yes }]" @update:model-value="set('oneHand')($event)" />
+      </Section>
       <Section :title="t.orientTitle" :hint="t.orientHint">
         <Seg :model-value="s.porient" :options="[{ value: 'vertical', label: t.vertical }, { value: 'horizontal', label: t.horizontal }]" @update:model-value="set('porient')($event)" />
       </Section>
@@ -131,13 +136,19 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
       <Section :title="t.collars" :hint="t.collarsHint">
         <Seg
           :model-value="s.collarKg"
-          :options="collarOpts.map((o) => ({ value: o.value, label: o.value === 0 ? t.none : fmt(o.value, s.lang) + ' KG' }))"
+          :options="collarOpts.map((o) => ({ value: o.value, label: o.value === 0 ? t.none : fmtW(o.value, s.lang) + ' KG' }))"
           @update:model-value="set('collarKg')($event)"
         />
       </Section>
     </template>
 
     <template v-else>
+      <Section :title="t.guideBtn">
+        <button type="button" class="wide" @click="ui.open.settings = false; ui.open.guide = 1">{{ t.guideBtn }}</button>
+      </Section>
+      <Section :title="t.awakeTitle" :hint="t.awakeHint">
+        <Seg :model-value="s.awake" :options="[{ value: false, label: t.no }, { value: true, label: t.yes }]" @update:model-value="set('awake')($event)" />
+      </Section>
       <Section :title="t.language">
         <Seg :model-value="s.lang" :options="[{ value: 'en', label: 'ENGLISH' }, { value: 'es', label: 'ESPAÑOL' }]" @update:model-value="set('lang')($event)" />
       </Section>

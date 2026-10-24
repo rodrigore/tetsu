@@ -14,6 +14,8 @@ import PctControl from './components/PctControl.vue'
 import PlateChips from './components/PlateChips.vue'
 import PrField from './components/PrField.vue'
 import SettingsSheet from './components/SettingsSheet.vue'
+import GuideSheet from './components/GuideSheet.vue'
+import { useWakeLock } from './core/useWakeLock'
 
 const app = useApp()
 const ui = useUi()
@@ -37,23 +39,27 @@ watchEffect(() => {
   root.lang = app.s.lang
 })
 
+useWakeLock(computed(() => app.s.awake))
+if (!app.s.guideDone) ui.open.guide = 1
+
 const { t, used, looks, chips, hero } = useLoad(() => isLight.value)
 const full = computed(() => app.s.look === 'full')
 </script>
 
 <template>
-  <main class="screen">
-    <BarPicker />
-    <LiftTabs />
-    <PrField />
-    <HeroValue :hero="hero" />
-    <BarView :used="used" :looks="looks" />
-    <PlateChips v-if="full" :chips="chips" :empty="used.length === 0" :empty-text="t.emptyBar" />
-    <PctControl />
+  <main class="screen" :class="{ 'one-hand': app.s.oneHand }">
+    <BarPicker class="o-header" />
+    <LiftTabs class="o-lifts" />
+    <PrField class="o-pr" />
+    <HeroValue class="o-hero" :hero="hero" />
+    <BarView class="o-bar" :used="used" :looks="looks" />
+    <PlateChips v-if="full" class="o-chips" :chips="chips" :empty="used.length === 0" :empty-text="t.emptyBar" />
+    <PctControl class="o-pct" />
   </main>
   <SettingsSheet v-if="ui.open.settings" />
   <InventorySheet v-if="ui.open.inventory" />
   <LiftsSheet v-if="ui.open.lifts" />
+  <GuideSheet v-if="ui.open.guide" />
 </template>
 
 <style scoped>
@@ -71,6 +77,20 @@ const full = computed(() => app.s.look === 'full')
 .screen > :deep(*) {
   flex: none;
 }
+.o-header { order: 0; }
+.o-lifts { order: 1; }
+.o-pr { order: 2; }
+.o-hero { order: 3; }
+.o-bar { order: 4; }
+.o-chips { order: 6; }
+.o-pct { order: 8; }
+/* One-hand: results on top, selectors near the thumb. */
+.one-hand .o-hero { order: 0; }
+.one-hand .o-bar { order: 1; }
+.one-hand .o-chips { order: 3; }
+.one-hand .o-header { order: 5; }
+.one-hand .o-lifts { order: 6; }
+.one-hand .o-pr { order: 7; }
 .screen > :deep(.wrap) {
   flex: 1 1 auto;
 }

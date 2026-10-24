@@ -15,6 +15,18 @@ export interface Bar {
   unit: Unit
 }
 
+export const PRESET_KEYS = [
+  'look', 'hero', 'side', 'oneHand', 'tsize', 'contrast', 'theme', 'olympic', 'porient', 'showDiff', 'awake',
+] as const
+
+export interface Preset {
+  id: string
+  /** Seeded presets are translated; the ones you save keep your text. */
+  name: string | { en: string; es: string }
+  seed?: boolean
+  vals: Partial<Pick<Settings, (typeof PRESET_KEYS)[number]>>
+}
+
 export interface Settings {
   lang: Lang
   unit: Unit
@@ -39,6 +51,11 @@ export interface Settings {
   customPlates: Bar[]
   pstep: number
   quick: number[]
+  oneHand: boolean
+  awake: boolean
+  presets: Preset[]
+  presetId: string | null
+  guideDone: boolean
 }
 
 const KEY = 'tetsu:v1'
@@ -76,6 +93,20 @@ const defaults = (): Settings => ({
   customPlates: [],
   pstep: 1,
   quick: [60, 70, 80, 90, 95, 100],
+  oneHand: false,
+  awake: false,
+  presets: [
+    {
+      id: 'gym', seed: true, name: { es: 'GIMNASIO', en: 'GYM' },
+      vals: { look: 'minimal', hero: 'side', oneHand: true, tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: false, awake: true },
+    },
+    {
+      id: 'box', seed: true, name: { es: 'BOX', en: 'BOX' },
+      vals: { look: 'minimal', hero: 'target', oneHand: false, tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: true, awake: true },
+    },
+  ],
+  presetId: null,
+  guideDone: false,
 })
 
 function load(): Settings {

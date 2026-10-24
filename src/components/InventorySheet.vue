@@ -4,7 +4,7 @@ import { useApp } from '../stores/app'
 import { useUi } from '../stores/ui'
 import { messages } from '../core/i18n'
 import { allPlates, defaultPairs } from '../core/catalog'
-import { fmt } from '../core/format'
+import { fmtW } from '../core/format'
 import { toKg, type Unit } from '../core/units'
 import Sheet from './Sheet.vue'
 import Section from './Section.vue'
@@ -43,7 +43,7 @@ function removeCustom(id: string) {
     <p class="hint">{{ t.invHint }}</p>
     <ul>
       <li v-for="p in rows" :key="p.id" :class="{ zero: count(p.id) === 0 }">
-        <span class="name"><span class="display">{{ fmt(p.value, app.s.lang) }}</span> {{ p.unit.toUpperCase() }}</span>
+        <span class="name"><span class="display">{{ fmtW(p.value, app.s.lang) }}</span> {{ p.unit.toUpperCase() }}</span>
         <button v-if="p.custom" type="button" class="rm" :aria-label="`${t.removeAria} ${p.value} ${p.unit}`" @click="removeCustom(p.id)">×</button>
         <span class="step">
           <button type="button" aria-label="−" @click="bump(p.id, -1)">−</button>

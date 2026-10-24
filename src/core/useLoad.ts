@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useApp } from '../stores/app'
 import { allPlates, defaultPairs } from './catalog'
-import { fmt } from './format'
+import { fmt, fmtW } from './format'
 import { messages } from './i18n'
 import { paletteOf } from './palette'
 import { plateLook } from './plateView'
@@ -48,7 +48,7 @@ export function useLoad(isLight: () => boolean) {
       def: p,
       value: p.value,
       unit: p.unit,
-      label: fmt(p.value, app.s.lang),
+      label: fmtW(p.value, app.s.lang),
     })),
   )
 

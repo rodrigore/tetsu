@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useApp } from '../stores/app'
-import { fmt } from '../core/format'
+import { fmtW } from '../core/format'
 import { messages } from '../core/i18n'
 import { useUi } from '../stores/ui'
 
 const app = useApp()
 const ui = useUi()
 const t = computed(() => messages(app.s.lang))
-const text = (b: { value: number; unit: string }) => `${fmt(b.value, app.s.lang)} ${b.unit.toUpperCase()}`
+const text = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.lang)} ${b.unit.toUpperCase()}`
 </script>
 
 <template>
