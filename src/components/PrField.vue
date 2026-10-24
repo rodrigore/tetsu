@@ -98,6 +98,18 @@ function onInput(e: Event) {
   line-height: 1;
   outline: none;
 }
+.lbl {
+  white-space: nowrap;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .field {
+    width: 96px;
+    font-size: 32px;
+  }
+  .edit {
+    width: 104px;
+  }
+}
 .unit {
   font-size: calc(16px * var(--ts));
   font-weight: 700;

@@ -29,8 +29,8 @@ const ui = useUi()
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  margin-right: -24px;
-  padding-right: 24px;
+  margin-right: calc(-1 * var(--pad, 24px));
+  padding-right: var(--pad, 24px);
 }
 .tab {
   flex: none;

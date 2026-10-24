@@ -108,7 +108,7 @@ const legend = computed(() => {
   position: relative;
   flex: 1;
   min-height: 140px;
-  margin: 0 -24px;
+  margin: 0 calc(-1 * var(--pad, 24px));
 }
 .rod {
   position: absolute;

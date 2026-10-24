@@ -140,6 +140,21 @@ function onInput(e: Event) {
   display: flex;
   gap: 6px;
 }
+@media (orientation: landscape) and (max-height: 500px) {
+  .quick {
+    display: none;
+  }
+  .field {
+    width: 84px;
+    font-size: 32px;
+  }
+  .of {
+    display: none;
+  }
+  .steps {
+    width: 104px;
+  }
+}
 .quick button {
   flex: 1;
   height: 40px;

@@ -48,9 +48,11 @@ const full = computed(() => app.s.look === 'full')
 
 <template>
   <main class="screen" :class="{ 'one-hand': app.s.oneHand }">
-    <BarPicker class="o-header" />
-    <LiftTabs class="o-lifts" />
-    <PrField class="o-pr" />
+    <div class="col-left">
+      <BarPicker class="o-header" />
+      <LiftTabs class="o-lifts" />
+      <PrField class="o-pr" />
+    </div>
     <HeroValue class="o-hero" :hero="hero" />
     <BarView class="o-bar" :used="used" :looks="looks" />
     <PlateChips v-if="full" class="o-chips" :chips="chips" :empty="used.length === 0" :empty-text="t.emptyBar" />
@@ -64,6 +66,7 @@ const full = computed(() => app.s.look === 'full')
 
 <style scoped>
 .screen {
+  --pad: 24px;
   width: 100%;
   max-width: 480px;
   height: 100dvh;
@@ -76,6 +79,9 @@ const full = computed(() => app.s.look === 'full')
 }
 .screen > :deep(*) {
   flex: none;
+}
+.col-left {
+  display: contents;
 }
 .o-header { order: 0; }
 .o-lifts { order: 1; }
@@ -93,5 +99,33 @@ const full = computed(() => app.s.look === 'full')
 .one-hand .o-pr { order: 7; }
 .screen > :deep(.wrap) {
   flex: 1 1 auto;
+}
+
+/* Phone on its side: three columns on top, the bar across the full width below. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .screen {
+    --pad: 20px;
+    max-width: none;
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 230px;
+    grid-template-rows: auto minmax(100px, 1fr) auto;
+    column-gap: 20px;
+    row-gap: 6px;
+    padding: max(12px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 12px max(20px, env(safe-area-inset-left));
+  }
+  .col-left {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .screen > :deep(.o-hero) { grid-column: 2; grid-row: 1; order: 0; min-width: 0; }
+  .screen > :deep(.o-pct) { grid-column: 3; grid-row: 1; order: 0; min-width: 0; }
+  .screen > :deep(.o-bar) { grid-column: 1 / -1; grid-row: 2; order: 0; min-height: 0; }
+  .screen > :deep(.o-chips) { grid-column: 1 / -1; grid-row: 3; order: 0; }
+  .col-left > :deep(*) { order: 0 !important; }
+  .screen :deep(.hint) { display: none; }
 }
 </style>
