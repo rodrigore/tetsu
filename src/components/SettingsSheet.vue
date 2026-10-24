@@ -146,6 +146,9 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
       <Section :title="t.guideBtn">
         <button type="button" class="wide" @click="ui.open.settings = false; ui.open.guide = 1">{{ t.guideBtn }}</button>
       </Section>
+      <Section :title="t.liftsTitle" :hint="t.liftsHint">
+        <button type="button" class="wide" @click="ui.open.lifts = true">{{ t.liftsTitle }}</button>
+      </Section>
       <Section :title="t.awakeTitle" :hint="t.awakeHint">
         <Seg :model-value="s.awake" :options="[{ value: false, label: t.no }, { value: true, label: t.yes }]" @update:model-value="set('awake')($event)" />
       </Section>

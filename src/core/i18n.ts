@@ -106,8 +106,10 @@ const en = {
   g1h: 'Pick your language and the unit for your PRs. You can change everything later in Settings.',
   g2: 'YOUR BAR',
   g2h: 'Pick the bar you use and whether you add collars.',
-  g3: 'YOUR PLATES',
-  g3h: 'Set how many plates you own of each size, kg and lb mixed.',
+  g3: 'YOUR LIFTS',
+  g3h: 'Rename, add or remove your main lifts and set their PRs.',
+  g4: 'YOUR PLATES',
+  g4h: 'Set how many plates you own of each size, kg and lb mixed.',
 }
 
 export type Dict = Record<keyof typeof en, string>
@@ -218,8 +220,10 @@ const es: Dict = {
   g1h: 'Elige el idioma y la unidad de tus PR. Después puedes cambiar todo en Ajustes.',
   g2: 'TU BARRA',
   g2h: 'Elige la barra que usas y si llevas trabas.',
-  g3: 'TUS DISCOS',
-  g3h: 'Marca cuántos discos tienes de cada tamaño, kg y lb mezclados.',
+  g3: 'TUS MOVIMIENTOS',
+  g3h: 'Cambia el nombre, agrega o quita tus movimientos básicos y define su PR.',
+  g4: 'TUS DISCOS',
+  g4h: 'Marca cuántos discos tienes de cada tamaño, kg y lb mezclados.',
 }
 
 export const messages = (lang: Lang): Dict => (lang === 'es' ? es : en)

@@ -4,6 +4,7 @@ import { useApp } from '../stores/app'
 import { useUi } from '../stores/ui'
 import { messages } from '../core/i18n'
 import { fmtW } from '../core/format'
+import LiftsEditor from './LiftsEditor.vue'
 import Section from './Section.vue'
 import Seg from './Seg.vue'
 
@@ -11,15 +12,16 @@ const app = useApp()
 const ui = useUi()
 const t = computed(() => messages(app.s.lang))
 const step = computed(() => ui.open.guide)
-const titles = computed(() => [t.value.g1, t.value.g2, t.value.g3])
-const hints = computed(() => [t.value.g1h, t.value.g2h, t.value.g3h])
+const STEPS = 4
+const titles = computed(() => [t.value.g1, t.value.g2, t.value.g3, t.value.g4])
+const hints = computed(() => [t.value.g1h, t.value.g2h, t.value.g3h, t.value.g4h])
 
 function close() {
   app.s.guideDone = true
   ui.open.guide = 0
 }
 function next() {
-  if (step.value >= 3) close()
+  if (step.value >= STEPS) close()
   else ui.open.guide++
 }
 function openInventory() {
@@ -33,7 +35,7 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
   <section class="guide" role="dialog" :aria-label="titles[step - 1]">
     <div class="inner">
       <div class="top">
-        <span class="count">{{ step }} / 3</span>
+        <span class="count">{{ step }} / {{ STEPS }}</span>
         <button type="button" class="skip" @click="close">{{ t.skip }}</button>
       </div>
       <div>
@@ -65,13 +67,17 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
         </Section>
       </template>
 
+      <template v-else-if="step === 3">
+        <LiftsEditor />
+      </template>
+
       <template v-else>
         <button type="button" class="wide" @click="openInventory">{{ t.guideInvBtn }}</button>
       </template>
 
       <div class="nav">
         <button type="button" class="back" @click="ui.open.guide = Math.max(1, step - 1)">{{ t.back }}</button>
-        <button type="button" class="next" @click="next">{{ step >= 3 ? t.finish : t.next }}</button>
+        <button type="button" class="next" @click="next">{{ step >= STEPS ? t.finish : t.next }}</button>
       </div>
     </div>
   </section>
