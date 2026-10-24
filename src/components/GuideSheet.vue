@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useApp } from '../stores/app'
+import { useApp, type Preset } from '../stores/app'
 import { useUi } from '../stores/ui'
 import { messages } from '../core/i18n'
 import { fmtW } from '../core/format'
+import LayoutPreview from './LayoutPreview.vue'
 import LiftsEditor from './LiftsEditor.vue'
 import Section from './Section.vue'
 import Seg from './Seg.vue'
@@ -12,9 +13,15 @@ const app = useApp()
 const ui = useUi()
 const t = computed(() => messages(app.s.lang))
 const step = computed(() => ui.open.guide)
-const STEPS = 4
-const titles = computed(() => [t.value.g1, t.value.g2, t.value.g3, t.value.g4])
-const hints = computed(() => [t.value.g1h, t.value.g2h, t.value.g3h, t.value.g4h])
+const STEPS = 5
+const titles = computed(() => [t.value.g1, t.value.gv, t.value.g2, t.value.g3, t.value.g4])
+const hints = computed(() => [t.value.g1h, t.value.gvh, t.value.g2h, t.value.g3h, t.value.g4h])
+
+const presetLabel = (p: Preset) => (typeof p.name === 'string' ? p.name : p.name[app.s.lang])
+function applyPreset(p: Preset) {
+  Object.assign(app.s, p.vals)
+  app.s.presetId = p.id
+}
 
 function close() {
   app.s.guideDone = true
@@ -53,6 +60,28 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
       </template>
 
       <template v-else-if="step === 2">
+        <LayoutPreview />
+        <Section :title="t.presets">
+          <div class="presets">
+            <button
+              v-for="p in app.s.presets"
+              :key="p.id"
+              type="button"
+              :class="{ on: app.s.presetId === p.id }"
+              :aria-pressed="app.s.presetId === p.id"
+              @click="applyPreset(p)"
+            >{{ presetLabel(p) }}</button>
+          </div>
+        </Section>
+        <Section :title="t.oneHandTitle">
+          <Seg v-model="app.s.oneHand" :options="[{ value: false, label: t.no }, { value: true, label: t.yes }]" />
+        </Section>
+        <Section :title="t.style">
+          <Seg v-model="app.s.look" :options="[{ value: 'full', label: t.full }, { value: 'minimal', label: t.minimal }]" />
+        </Section>
+      </template>
+
+      <template v-else-if="step === 3">
         <Section :title="t.barsTitle">
           <Seg
             v-model="app.s.barIndex"
@@ -67,7 +96,7 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
         </Section>
       </template>
 
-      <template v-else-if="step === 3">
+      <template v-else-if="step === 4">
         <LiftsEditor />
       </template>
 
@@ -134,6 +163,27 @@ p {
   letter-spacing: 0.03em;
   color: var(--muted);
   line-height: 1.3;
+}
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.presets button {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  font-size: calc(16px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.presets button.on {
+  background: var(--accent);
+  color: var(--on);
+  border-color: var(--accent);
 }
 .wide {
   width: 100%;
