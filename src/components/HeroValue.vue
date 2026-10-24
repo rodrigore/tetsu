@@ -35,7 +35,7 @@ const otherSize = computed(() => (landscape.value ? 30 : fit.value))
         <span class="display unit">{{ hero.otherUnit }}</span>
       </template>
     </div>
-    <div v-if="!full && hero.minLine" class="min">{{ hero.minLine }}</div>
+    <div v-if="(!full || landscape) && hero.minLine" class="min">{{ hero.minLine }}</div>
   </div>
 </template>
 

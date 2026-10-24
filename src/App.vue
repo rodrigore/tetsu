@@ -14,6 +14,7 @@ import PctControl from './components/PctControl.vue'
 import PlateChips from './components/PlateChips.vue'
 import PrField from './components/PrField.vue'
 import SettingsSheet from './components/SettingsSheet.vue'
+import StatsStrip from './components/StatsStrip.vue'
 import GuideSheet from './components/GuideSheet.vue'
 import { useWakeLock } from './core/useWakeLock'
 
@@ -42,7 +43,7 @@ watchEffect(() => {
 useWakeLock(computed(() => app.s.awake))
 if (!app.s.guideDone) ui.open.guide = 1
 
-const { t, used, looks, chips, hero } = useLoad(() => isLight.value)
+const { t, used, looks, chips, hero, targetKg, result, diffText, exact } = useLoad(() => isLight.value)
 const full = computed(() => app.s.look === 'full')
 </script>
 
@@ -56,6 +57,7 @@ const full = computed(() => app.s.look === 'full')
     <HeroValue class="o-hero" :hero="hero" />
     <BarView class="o-bar" :used="used" :looks="looks" />
     <PlateChips v-if="full" class="o-chips" :chips="chips" :empty="used.length === 0" :empty-text="t.emptyBar" />
+    <StatsStrip v-if="full" class="o-stats" :t="t" :target-kg="targetKg" :total-kg="result.totalKg" :diff-text="diffText" :exact="exact" />
     <PctControl class="o-pct" />
   </main>
   <SettingsSheet v-if="ui.open.settings" />
@@ -89,11 +91,13 @@ const full = computed(() => app.s.look === 'full')
 .o-hero { order: 3; }
 .o-bar { order: 4; }
 .o-chips { order: 6; }
+.o-stats { order: 7; }
 .o-pct { order: 8; }
 /* One-hand: results on top, selectors near the thumb. */
 .one-hand .o-hero { order: 0; }
 .one-hand .o-bar { order: 1; }
 .one-hand .o-chips { order: 3; }
+.one-hand .o-stats { order: 4; }
 .one-hand .o-header { order: 5; }
 .one-hand .o-lifts { order: 6; }
 .one-hand .o-pr { order: 7; }
@@ -127,5 +131,6 @@ const full = computed(() => app.s.look === 'full')
   .screen > :deep(.o-chips) { grid-column: 1 / -1; grid-row: 3; order: 0; }
   .col-left > :deep(*) { order: 0 !important; }
   .screen :deep(.hint) { display: none; }
+  .screen > :deep(.o-stats) { display: none; }
 }
 </style>
