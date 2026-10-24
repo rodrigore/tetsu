@@ -3,8 +3,10 @@ import { computed } from 'vue'
 import { useApp } from '../stores/app'
 import { fmt } from '../core/format'
 import { messages } from '../core/i18n'
+import { useUi } from '../stores/ui'
 
 const app = useApp()
+const ui = useUi()
 const t = computed(() => messages(app.s.lang))
 const text = (b: { value: number; unit: string }) => `${fmt(b.value, app.s.lang)} ${b.unit.toUpperCase()}`
 </script>
@@ -24,6 +26,9 @@ const text = (b: { value: number; unit: string }) => `${fmt(b.value, app.s.lang)
       <span class="display num">{{ text(b) }}</span>
       <span class="cap">{{ t.bar }}</span>
     </button>
+    <button type="button" class="gear" :aria-label="t.settingsAria" @click="ui.open.settings = true">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 17h1M11 17h9" stroke="currentColor" stroke-width="2" stroke-linecap="square" fill="none" /><circle cx="16" cy="7" r="2.5" stroke="currentColor" stroke-width="2" fill="none" /><circle cx="8" cy="17" r="2.5" stroke="currentColor" stroke-width="2" fill="none" /></svg>
+    </button>
   </div>
 </template>
 
@@ -31,6 +36,19 @@ const text = (b: { value: number; unit: string }) => `${fmt(b.value, app.s.lang)
 .row {
   display: flex;
   gap: 8px;
+}
+.gear {
+  flex: none;
+  margin-left: auto;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .pill {
   display: flex;

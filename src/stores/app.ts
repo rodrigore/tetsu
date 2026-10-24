@@ -36,6 +36,9 @@ export interface Settings {
   lifts: Lift[]
   liftId: string
   pct: number
+  customPlates: Bar[]
+  pstep: number
+  quick: number[]
 }
 
 const KEY = 'tetsu:v1'
@@ -70,6 +73,9 @@ const defaults = (): Settings => ({
   ],
   liftId: 'back',
   pct: 85,
+  customPlates: [],
+  pstep: 1,
+  quick: [60, 70, 80, 90, 95, 100],
 })
 
 function load(): Settings {

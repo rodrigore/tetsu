@@ -1,8 +1,9 @@
 import { computed } from 'vue'
 import { useApp } from '../stores/app'
-import { CATALOG, defaultPairs, plateId } from './catalog'
+import { allPlates, defaultPairs } from './catalog'
 import { fmt } from './format'
 import { messages } from './i18n'
+import { paletteOf } from './palette'
 import { plateLook } from './plateView'
 import { solve, type PlateDef } from './solver'
 import { fromKg, toKg } from './units'
@@ -18,12 +19,12 @@ export interface UsedPlate {
 export function useLoad(isLight: () => boolean) {
   const app = useApp()
 
-  const plates = computed<PlateDef[]>(() =>
-    CATALOG.map((p) => {
-      const id = plateId(p)
-      return { id, value: p.value, unit: p.unit, pairs: app.s.inventory[id] ?? defaultPairs(id) }
-    }),
-  )
+  const plates = computed<PlateDef[]>(() => allPlates(app.s.customPlates).map((p) => ({
+    id: p.id,
+    value: p.value,
+    unit: p.unit,
+    pairs: app.s.inventory[p.id] ?? defaultPairs(p.id),
+  })))
 
   const targetKg = computed(() => (app.lift.kg * app.s.pct) / 100)
   const barKg = computed(() => toKg(app.bar.value, app.bar.unit))
@@ -53,7 +54,7 @@ export function useLoad(isLight: () => boolean) {
 
   const looks = computed(() =>
     used.value.map((p) =>
-      plateLook(p.value, p.unit, { accent: app.s.accent, olympic: app.s.olympic, light: isLight() }),
+      plateLook(p.value, p.unit, { accent: paletteOf(app.s.accent)[isLight() ? 'accentLight' : 'accent'], olympic: app.s.olympic && !p.def.id.startsWith('c:'), light: isLight() }),
     ),
   )
 

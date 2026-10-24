@@ -18,3 +18,15 @@ const DEFAULT_ZERO = new Set(['30lb', '20lb', '25kg', '20kg', '15kg', '10kg', '5
 
 export const defaultPairs = (id: string): number =>
   DEFAULT_PAIRS[id] ?? (DEFAULT_ZERO.has(id) ? 0 : 2)
+
+export interface InventoryPlate extends CatalogPlate {
+  id: string
+  custom: boolean
+}
+
+/** Standard plates first, then the ones the user added (ids start with "c:"). Heaviest first. */
+export function allPlates(custom: CatalogPlate[]): InventoryPlate[] {
+  const std = CATALOG.map((p) => ({ ...p, id: plateId(p), custom: false }))
+  const own = custom.map((p) => ({ ...p, id: `c:${plateId(p)}`, custom: true }))
+  return [...std, ...own]
+}

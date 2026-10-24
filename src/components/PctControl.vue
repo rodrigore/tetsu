@@ -7,7 +7,6 @@ import { parseNumber } from '../core/units'
 
 const app = useApp()
 const t = computed(() => messages(app.s.lang))
-const QUICK = [60, 70, 80, 90, 95, 100]
 
 const raw = ref<string | null>(null)
 watch(() => app.s.lang, () => (raw.value = null))
@@ -41,10 +40,10 @@ function onInput(e: Event) {
         <span class="of">{{ t.ofPr }}</span>
       </div>
       <div class="steps">
-        <button type="button" :aria-label="t.pctDownAria" @click="set(app.s.pct - 1)">
+        <button type="button" :aria-label="t.pctDownAria" @click="set(app.s.pct - app.s.pstep)">
           <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 9h12" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" fill="none" /></svg>
         </button>
-        <button type="button" :aria-label="t.pctUpAria" @click="set(app.s.pct + 1)">
+        <button type="button" :aria-label="t.pctUpAria" @click="set(app.s.pct + app.s.pstep)">
           <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 9h12M9 3v12" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" fill="none" /></svg>
         </button>
       </div>
@@ -54,21 +53,21 @@ function onInput(e: Event) {
       type="range"
       min="30"
       max="105"
-      step="1"
+      :step="app.s.pstep"
       :value="app.s.pct"
       :aria-label="t.pctAria"
       @input="set(Number(($event.target as HTMLInputElement).value))"
     />
     <div v-if="app.s.look === 'full'" class="quick">
       <button
-        v-for="q in QUICK"
+        v-for="q in app.s.quick"
         :key="q"
         type="button"
         :class="{ on: q === app.s.pct }"
         :aria-pressed="q === app.s.pct"
         @click="set(q)"
       >
-        {{ q }}
+        {{ fmt(q, app.s.lang) }}
       </button>
     </div>
   </div>

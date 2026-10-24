@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { useApp } from '../stores/app'
+import { useUi } from '../stores/ui'
+import { messages } from '../core/i18n'
 
 const app = useApp()
+const ui = useUi()
 </script>
 
 <template>
@@ -17,6 +20,7 @@ const app = useApp()
     >
       {{ app.liftName(l) }}
     </button>
+    <button type="button" class="tab add" @click="ui.open.lifts = true">{{ messages(app.s.lang).addLift }}</button>
   </div>
 </template>
 
@@ -39,6 +43,11 @@ const app = useApp()
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--line);
+}
+.tab.add {
+  background: transparent;
+  color: var(--accent);
+  border: 1px dashed var(--line2);
 }
 .tab.on {
   background: var(--accent);
