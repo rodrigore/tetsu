@@ -98,11 +98,11 @@ const defaults = (): Settings => ({
   presets: [
     {
       id: 'gym', seed: true, name: { es: 'GIMNASIO', en: 'GYM' },
-      vals: { look: 'minimal', hero: 'side', oneHand: true, tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: false, awake: true },
+      vals: { look: 'minimal', hero: 'side', oneHand: false, tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: false, awake: true },
     },
     {
       id: 'box', seed: true, name: { es: 'BOX', en: 'BOX' },
-      vals: { look: 'minimal', hero: 'target', oneHand: false, tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: true, awake: true },
+      vals: { look: 'minimal', hero: 'target', oneHand: true, tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: true, awake: true },
     },
   ],
   presetId: null,
@@ -113,7 +113,13 @@ function load(): Settings {
   const base = defaults()
   try {
     const raw = localStorage.getItem(KEY)
-    if (raw) return { ...base, ...(JSON.parse(raw) as Partial<Settings>) }
+    if (raw) {
+      const saved = JSON.parse(raw) as Partial<Settings>
+      // Factory presets always come from the app, so improvements reach existing installs;
+      // the ones the user saved are kept as they are.
+      const own = (saved.presets ?? []).filter((p) => !p.seed)
+      return { ...base, ...saved, presets: [...base.presets, ...own] }
+    }
   } catch {
     /* storage blocked or corrupt: start from defaults */
   }
