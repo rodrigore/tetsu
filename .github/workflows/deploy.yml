@@ -1,16 +1,18 @@
 name: Test and deploy
 
+# Features go in through pull requests into dev; dev is promoted to main, and only main is deployed.
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
+    branches: [main, dev]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
