@@ -1,3 +1,4 @@
+import { defaultShare, type CardStyle } from '../core/shareCard'
 import { defineStore } from 'pinia'
 import { computed, reactive, watch } from 'vue'
 import type { Lang } from '../core/i18n'
@@ -67,6 +68,8 @@ export interface Settings {
   /** Warm-up percentages of the working weight. */
   warm: number[]
   installDismissed: boolean
+  /** Last choices in the share sheet. */
+  share: CardStyle
 }
 
 const KEY = 'tetsu:v1'
@@ -122,6 +125,7 @@ const defaults = (): Settings => ({
   onBar: null,
   warm: [40, 60, 80],
   installDismissed: false,
+  share: defaultShare(),
 })
 
 function load(): Settings {
@@ -133,7 +137,7 @@ function load(): Settings {
       // Factory presets always come from the app, so improvements reach existing installs;
       // the ones the user saved are kept as they are.
       const own = (saved.presets ?? []).filter((p) => !p.seed)
-      const merged = { ...base, ...saved, presets: [...base.presets, ...own] }
+      const merged = { ...base, ...saved, share: { ...base.share, ...saved.share }, presets: [...base.presets, ...own] }
       // v2: the minimal view became the default. Applied once, then your own choice sticks.
       if ((saved.schema ?? 1) < 2) {
         merged.look = 'minimal'

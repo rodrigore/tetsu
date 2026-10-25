@@ -61,4 +61,12 @@ describe('toast store', () => {
     toast.show('dos')
     expect(toast.current?.text).toBe('dos')
   })
+
+  it('keeps the share choices and fills in missing ones from the defaults', () => {
+    const app = useApp()
+    expect(app.s.share.template).toBe('serie')
+    expect(app.s.share.tone).toBe('dark')
+    app.s.share.template = 'numero'
+    expect(app.s.share.plates).toBe(true)
+  })
 })

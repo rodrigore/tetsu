@@ -17,6 +17,7 @@ import SettingsSheet from './components/SettingsSheet.vue'
 import StatsStrip from './components/StatsStrip.vue'
 import ChangeStrip from './components/ChangeStrip.vue'
 import WarmupSheet from './components/WarmupSheet.vue'
+import ShareSheet from './components/ShareSheet.vue'
 import Toast from './components/Toast.vue'
 import InstallHint from './components/InstallHint.vue'
 import { useToast } from './stores/toast'
@@ -81,7 +82,7 @@ async function share() {
     </div>
     <HeroValue class="o-hero" :hero="hero" :notice="notice" />
     <BarView class="o-bar" :used="used" :looks="looks" />
-    <ChangeStrip class="o-actions" :used="used" :info="plateInfo" @share="share" />
+    <ChangeStrip class="o-actions" :used="used" :info="plateInfo" @share="ui.open.share = true" />
     <PlateChips v-if="full" class="o-chips" :chips="chips" :empty="used.length === 0" :empty-text="t.emptyBar" />
     <StatsStrip v-if="full" class="o-stats" :t="t" :target-kg="targetKg" :total-kg="result.totalKg" :diff-text="diffText" :exact="exact" />
     <PctControl class="o-pct" />
@@ -90,6 +91,7 @@ async function share() {
   <InventorySheet v-if="ui.open.inventory" />
   <LiftsSheet v-if="ui.open.lifts" />
   <WarmupSheet v-if="ui.open.warmup" />
+  <ShareSheet v-if="ui.open.share" @text="share" />
   <GuideSheet v-if="ui.open.guide" />
   <InstallHint />
   <Toast />

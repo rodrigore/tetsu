@@ -40,7 +40,9 @@ const text = (c: { id: string; count: number }) => {
     <div class="btns">
       <button type="button" :disabled="same" @click="mark">{{ t.markLoaded }}</button>
       <button type="button" @click="ui.open.warmup = true">{{ t.warmup }}</button>
-      <button type="button" @click="$emit('share')">{{ t.share }}</button>
+      <button type="button" class="ico" :aria-label="t.share" @click="$emit('share')">
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3" /><path d="M8.5 6.5L12 3l3.5 3.5" /><path d="M7 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-1" /></svg>
+      </button>
     </div>
   </div>
 </template>
@@ -115,6 +117,16 @@ const text = (c: { id: string; count: number }) => {
   font-size: calc(13px * var(--ts));
   font-weight: 700;
   letter-spacing: 0.08em;
+}
+.btns button.ico {
+  flex: none;
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--accent);
+  border-color: var(--accent);
 }
 .btns button:disabled {
   color: var(--muted);
