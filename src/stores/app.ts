@@ -2,6 +2,8 @@ import { defaultShare, type CardStyle } from '../core/shareCard'
 import { defineStore } from 'pinia'
 import { computed, reactive, watch } from 'vue'
 import type { Lang } from '../core/i18n'
+import type { Formula } from '../core/oneRm'
+import { PLAN_TEMPLATES, type PlanSet } from '../core/plan'
 import type { RoundMode } from '../core/solver'
 import type { Unit } from '../core/units'
 
@@ -70,6 +72,10 @@ export interface Settings {
   installDismissed: boolean
   /** Last choices in the share sheet. */
   share: CardStyle
+  /** Formula for the PR estimate from reps. */
+  e1rm: Formula
+  /** Training: the sets (percentage and reps) and how the rest between them behaves. */
+  plan: { sets: PlanSet[]; rest: number; auto: boolean; sound: boolean }
 }
 
 const KEY = 'tetsu:v1'
@@ -126,6 +132,8 @@ const defaults = (): Settings => ({
   warm: [40, 60, 80],
   installDismissed: false,
   share: defaultShare(),
+  e1rm: 'epley',
+  plan: { sets: PLAN_TEMPLATES[0]!.sets.map((x) => ({ ...x })), rest: 120, auto: true, sound: true },
 })
 
 function load(): Settings {
@@ -137,7 +145,7 @@ function load(): Settings {
       // Factory presets always come from the app, so improvements reach existing installs;
       // the ones the user saved are kept as they are.
       const own = (saved.presets ?? []).filter((p) => !p.seed)
-      const merged = { ...base, ...saved, share: { ...base.share, ...saved.share }, presets: [...base.presets, ...own] }
+      const merged = { ...base, ...saved, share: { ...base.share, ...saved.share }, plan: { ...base.plan, ...saved.plan }, presets: [...base.presets, ...own] }
       // v2: the minimal view became the default. Applied once, then your own choice sticks.
       if ((saved.schema ?? 1) < 2) {
         merged.look = 'minimal'

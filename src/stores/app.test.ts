@@ -69,4 +69,21 @@ describe('toast store', () => {
     app.s.share.template = 'numero'
     expect(app.s.share.plates).toBe(true)
   })
+
+  it('starts with the ramp plan, a 2:00 rest and Epley', () => {
+    const app = useApp()
+    expect(app.s.e1rm).toBe('epley')
+    expect(app.s.plan.sets).toHaveLength(4)
+    expect(app.s.plan.rest).toBe(120)
+    expect(app.s.plan.auto).toBe(true)
+    expect(app.s.plan.sound).toBe(true)
+  })
+
+  it('does not share the plan sets with the template', () => {
+    const app = useApp()
+    app.s.plan.sets[0]!.pct = 10
+    expect(useApp().s.plan.sets[0]!.pct).toBe(10)
+    setActivePinia(createPinia())
+    expect(useApp().s.plan.sets[0]!.pct).toBe(60)
+  })
 })

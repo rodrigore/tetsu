@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watchEffect } from 'vue'
+import { computed, onBeforeUnmount, ref, watch, watchEffect } from 'vue'
 import { useApp } from './stores/app'
 import { useUi } from './stores/ui'
 import { useLoad } from './core/useLoad'
@@ -18,6 +18,12 @@ import StatsStrip from './components/StatsStrip.vue'
 import ChangeStrip from './components/ChangeStrip.vue'
 import WarmupSheet from './components/WarmupSheet.vue'
 import ShareSheet from './components/ShareSheet.vue'
+import PrCalcSheet from './components/PrCalcSheet.vue'
+import ManualSheet from './components/ManualSheet.vue'
+import PlanSheet from './components/PlanSheet.vue'
+import TrainSheet from './components/TrainSheet.vue'
+import RoundAlt from './components/RoundAlt.vue'
+import { useTrain } from './stores/train'
 import Toast from './components/Toast.vue'
 import InstallHint from './components/InstallHint.vue'
 import { useToast } from './stores/toast'
@@ -27,6 +33,7 @@ import { useWakeLock } from './core/useWakeLock'
 const app = useApp()
 const ui = useUi()
 const toast = useToast()
+const train = useTrain()
 
 // "auto" follows the phone's light/dark setting.
 const mq = window.matchMedia('(prefers-color-scheme: light)')
@@ -47,11 +54,13 @@ watchEffect(() => {
   root.lang = app.s.lang
 })
 
-useWakeLock(computed(() => app.s.awake))
+useWakeLock(computed(() => app.s.awake || train.active))
 if (!app.s.guideDone) ui.open.guide = 1
 
 const { t, used, looks, chips, hero, targetKg, result, diffText, exact, notice, plateInfo, shareMessage } = useLoad(() => isLight.value)
 const full = computed(() => app.s.look === 'full')
+// A rounding picked for one target does not carry over to the next.
+watch(targetKg, () => (ui.roundPick = null))
 
 // Native share sheet where it exists (iPhone), clipboard otherwise.
 async function share() {
@@ -83,6 +92,7 @@ async function share() {
     <HeroValue class="o-hero" :hero="hero" :notice="notice" />
     <BarView class="o-bar" :used="used" :looks="looks" />
     <ChangeStrip class="o-actions" :used="used" :info="plateInfo" @share="ui.open.share = true" />
+    <RoundAlt class="o-round" />
     <PlateChips v-if="full" class="o-chips" :chips="chips" :empty="used.length === 0" :empty-text="t.emptyBar" />
     <StatsStrip v-if="full" class="o-stats" :t="t" :target-kg="targetKg" :total-kg="result.totalKg" :diff-text="diffText" :exact="exact" />
     <PctControl class="o-pct" />
@@ -91,6 +101,10 @@ async function share() {
   <InventorySheet v-if="ui.open.inventory" />
   <LiftsSheet v-if="ui.open.lifts" />
   <WarmupSheet v-if="ui.open.warmup" />
+  <PrCalcSheet v-if="ui.open.pr" />
+  <ManualSheet v-if="ui.open.manual" />
+  <PlanSheet v-if="ui.open.plan" />
+  <TrainSheet v-if="train.active" />
   <ShareSheet v-if="ui.open.share" @text="share" />
   <GuideSheet v-if="ui.open.guide" />
   <InstallHint />
@@ -131,6 +145,7 @@ async function share() {
 .o-hero { order: 3; }
 .o-bar { order: 4; }
 .o-actions { order: 5; }
+.o-round { order: 5; }
 .o-chips { order: 6; }
 .o-stats { order: 7; }
 .o-pct { order: 8; }
@@ -138,6 +153,7 @@ async function share() {
 .one-hand .o-hero { order: 0; }
 .one-hand .o-bar { order: 1; }
 .one-hand .o-actions { order: 2; }
+.one-hand .o-round { order: 2; }
 .one-hand .o-chips { order: 3; }
 .one-hand .o-stats { order: 4; }
 .one-hand .o-header { order: 5; }
@@ -175,5 +191,6 @@ async function share() {
   .screen :deep(.hint) { display: none; }
   .screen > :deep(.o-stats) { display: none; }
   .screen > :deep(.o-actions) { display: none; }
+  .screen > :deep(.o-round) { display: none; }
 }
 </style>

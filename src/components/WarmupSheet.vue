@@ -14,12 +14,12 @@ import Sheet from './Sheet.vue'
 const app = useApp()
 const ui = useUi()
 const t = computed(() => messages(app.s.lang))
-const { plates, barKg, targetKg, plateInfo } = useLoad(() => false)
+const { plates, barKg, targetKg, plateInfo, mode } = useLoad(() => false)
 
 const base = computed(() => ({ barKg: barKg.value, collarKg: app.s.collarKg, plates: plates.value, mode: app.s.round }))
 const steps = computed(() => {
   const warm = warmupSteps(targetKg.value, app.s.warm, base.value)
-  const work = solve({ ...base.value, targetKg: targetKg.value })
+  const work = solve({ ...base.value, targetKg: targetKg.value, mode: mode.value })
   const all = [
     ...warm.map((s) => ({
       label: s.pct === null ? t.value.emptyBarStep : `${fmt(s.pct, app.s.lang)} %`,

@@ -11,7 +11,7 @@ import { warmupSteps } from './warmup'
 export type CardFormat = 'story' | 'square'
 export type CardTemplate =
   | 'serie' | 'sesion' | 'tabla' | 'foto' | 'numero' | 'frase' | 'porcentaje' | 'discos' | 'series'
-  | 'compacta' | 'linea'
+  | 'compacta' | 'linea' | 'nuevopr'
 export type Tone = 'dark' | 'light'
 
 export const TEMPLATES: { id: CardTemplate; format: CardFormat; name: { es: string; en: string } }[] = [
@@ -26,9 +26,11 @@ export const TEMPLATES: { id: CardTemplate; format: CardFormat; name: { es: stri
   { id: 'series', format: 'story', name: { es: 'SERIES SIMPLES', en: 'SIMPLE SETS' } },
   { id: 'compacta', format: 'square', name: { es: 'COMPACTA', en: 'COMPACT' } },
   { id: 'linea', format: 'square', name: { es: 'LÍNEA', en: 'LINE' } },
+  { id: 'nuevopr', format: 'story', name: { es: 'NUEVO PR', en: 'NEW PR' } },
 ]
 
-export const templatesFor = (f: CardFormat) => TEMPLATES.filter((t) => t.format === f)
+/** The new-PR card has its own entry point, so it is not offered in the regular carousel. */
+export const templatesFor = (f: CardFormat) => TEMPLATES.filter((t) => t.format === f && t.id !== 'nuevopr')
 export const formatOf = (t: CardTemplate): CardFormat => TEMPLATES.find((x) => x.id === t)!.format
 export const cardSize = (f: CardFormat) => ({ w: 360, h: f === 'story' ? 640 : 360 })
 
@@ -49,7 +51,16 @@ export interface CardRow {
   sideKg: number
   current: boolean
 }
+/** A new personal record, for the new-PR card. */
+export interface PrInfo {
+  newKg: number
+  /** The record it beats, if there was one. */
+  prevKg: number | null
+  /** The set it was estimated from. */
+  source: { kg: number; reps: number } | null
+}
 export interface CardData {
+  pr?: PrInfo
   lang: Lang
   unit: Unit
   side: 'kg' | 'lb' | 'both'
@@ -105,6 +116,7 @@ export interface BuildInput {
   url: string
   /** Bar, collars, plates and rounding, as used by the main screen. */
   base: Omit<SolveInput, 'targetKg'>
+  pr?: PrInfo
 }
 
 const TABLE_PCTS = [60, 70, 80, 90, 95, 100]
@@ -148,6 +160,7 @@ export function buildCardData(i: BuildInput): CardData {
   })
 
   return {
+    pr: i.pr,
     lang: i.lang,
     unit: i.unit,
     side: i.side,
@@ -714,9 +727,71 @@ function tLinea(e: Env): void {
   if (s.date) text(ctx, c.date, W - PAD, H - 26, { size: 14, weight: 600, color: k.muted, align: 'right', ls: 0.12 })
 }
 
+/** New personal record: the badge, the weight, how much it beat the old one by. */
+function tNuevoPR(e: Env): void {
+  const { ctx, c, k } = e
+  const es = c.lang === 'es'
+  const pr = c.pr ?? { newKg: c.prKg, prevKg: null, source: null }
+  const unit = U(c.unit)
+  header(e)
+
+  const badge = es ? 'NUEVO PR' : 'NEW PR'
+  const bw = measure(ctx, badge, 19, 700, 0.16) + 28 + 26
+  rrect(ctx, PAD, 150, bw, 34, 17)
+  ctx.fillStyle = k.accent
+  ctx.fill()
+  ctx.strokeStyle = k.onAccent
+  ctx.lineWidth = 3
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.beginPath()
+  ctx.moveTo(PAD + 22, 173)
+  ctx.lineTo(PAD + 22, 161)
+  ctx.moveTo(PAD + 16, 166)
+  ctx.lineTo(PAD + 22, 160)
+  ctx.lineTo(PAD + 28, 166)
+  ctx.stroke()
+  text(ctx, badge, PAD + 40, 173, { size: 19, color: k.onAccent, ls: 0.16 })
+
+  text(ctx, c.liftName, PAD, 222, { size: 16, weight: 600, color: k.muted, ls: 0.14 })
+  const n = bigNumber(e, num(c, pr.newKg), PAD, 350, 150, 232)
+  text(ctx, unit, PAD + n.w + 12, 350, { size: 40, color: k.accent })
+
+  if (pr.prevKg !== null && pr.newKg > pr.prevKg) {
+    const gain = fmt(fromKg(pr.newKg - pr.prevKg, c.unit), c.lang)
+    runs(ctx, [{ t: `+${gain}`, size: 44, color: k.accent, gap: 6 }, { t: unit, size: 24, color: k.accent }], PAD, 410)
+  }
+
+  if (pr.prevKg !== null) {
+    const top = Math.max(pr.newKg, pr.prevKg)
+    const barW = W - 2 * PAD
+    const rows: [string, number, string, boolean][] = [
+      [es ? 'ANTES' : 'BEFORE', pr.prevKg, k.bar, false],
+      [es ? 'AHORA' : 'NOW', pr.newKg, k.accent, true],
+    ]
+    rows.forEach(([label, kg, color, now], i) => {
+      const y = 470 + i * 44
+      text(ctx, label, PAD, y, { size: 14, weight: 600, color: k.muted, ls: 0.14 })
+      text(ctx, `${num(c, kg)} ${unit}`, W - PAD, y, { size: 14, weight: 600, color: now ? k.accent : k.muted, align: 'right', ls: 0.04 })
+      rrect(ctx, PAD, y + 8, barW, 8, 4)
+      ctx.fillStyle = k.line
+      ctx.fill()
+      rrect(ctx, PAD, y + 8, Math.max(8, (barW * kg) / top), 8, 4)
+      ctx.fillStyle = color
+      ctx.fill()
+    })
+  }
+
+  if (pr.source) {
+    const from = es ? 'Estimado con' : 'Estimated from'
+    text(ctx, `${from} ${num(c, pr.source.kg)} ${unit} × ${pr.source.reps} ${es ? 'REPS' : 'REPS'}`, PAD, 586, { size: 20, color: k.fg, ls: 0.08 })
+  }
+  footer(e)
+}
+
 const DRAW: Record<CardTemplate, (e: Env) => void> = {
   serie: tSerie, sesion: tSesion, tabla: tTabla, foto: tFoto, numero: tNumero, frase: tFrase,
-  porcentaje: tPorcentaje, discos: tDiscos, series: tSeries, compacta: tCompacta, linea: tLinea,
+  porcentaje: tPorcentaje, discos: tDiscos, series: tSeries, compacta: tCompacta, linea: tLinea, nuevopr: tNuevoPR,
 }
 
 /** Draws one card at `scale` device pixels per design pixel. Sizes the canvas. */

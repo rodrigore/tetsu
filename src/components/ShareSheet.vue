@@ -12,6 +12,7 @@ import {
   cardFileName,
   formatOf,
   loadCardFonts,
+  TEMPLATES,
   templatesFor,
   type CardFormat,
   type CardStyle,
@@ -24,7 +25,7 @@ const app = useApp()
 const ui = useUi()
 const toast = useToast()
 const t = computed(() => messages(app.s.lang))
-const { plates, barKg } = useLoad(() => false)
+const { plates, barKg, mode } = useLoad(() => false)
 
 const data = computed(() =>
   buildCardData({
@@ -39,13 +40,17 @@ const data = computed(() =>
     warm: app.s.warm,
     date: new Date(),
     url: 'rodrigore.github.io/tetsu',
-    base: { barKg: barKg.value, collarKg: app.s.collarKg, plates: plates.value, mode: app.s.round },
+    base: { barKg: barKg.value, collarKg: app.s.collarKg, plates: plates.value, mode: mode.value },
+    pr: ui.prCard ?? undefined,
   }),
 )
 
-const style = computed<CardStyle>(() => ({ ...app.s.share, accent: app.s.share.accent || app.s.accent }))
-const format = computed<CardFormat>(() => formatOf(app.s.share.template))
-const list = computed(() => templatesFor(format.value))
+// A new record has its own card; the usual choices of template and format do not apply.
+const prMode = computed(() => !!ui.prCard)
+const current = computed<CardStyle['template']>(() => (prMode.value ? 'nuevopr' : app.s.share.template))
+const style = computed<CardStyle>(() => ({ ...app.s.share, template: current.value, accent: app.s.share.accent || app.s.accent }))
+const format = computed<CardFormat>(() => formatOf(current.value))
+const list = computed(() => (prMode.value ? TEMPLATES.filter((x) => x.id === 'nuevopr') : templatesFor(format.value)))
 const lastOf = { story: 'serie', square: 'compacta' } as Record<CardFormat, CardStyle['template']>
 const setFormat = (f: CardFormat) => {
   if (f === format.value) return
@@ -65,13 +70,18 @@ const pickAccent = (hex: string) => (app.s.share.accent = hex)
 const light = computed(() => app.s.share.tone === 'light')
 const busy = ref(false)
 
-const close = () => (ui.open.share = false)
+const close = () => {
+  ui.open.share = false
+  ui.prCard = null
+}
 const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close()
 onMounted(() => {
   window.addEventListener('keydown', onKey)
-  centre(app.s.share.template)
+  centre(current.value)
 })
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+
+const fileName = computed(() => cardFileName({ liftName: data.value.liftName, totalKg: ui.prCard?.newKg ?? data.value.totalKg }))
 
 async function makeBlob(): Promise<Blob> {
   await loadCardFonts()
@@ -82,7 +92,7 @@ function download(blob: Blob) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = cardFileName(data.value)
+  a.download = fileName.value
   document.body.appendChild(a)
   a.click()
   a.remove()
@@ -118,7 +128,7 @@ const copy = () =>
 const share = () =>
   run(async () => {
     const blob = await makeBlob()
-    const file = new File([blob], cardFileName(data.value), { type: 'image/png' })
+    const file = new File([blob], fileName.value, { type: 'image/png' })
     if (navigator.canShare?.({ files: [file] })) {
       await navigator.share({ files: [file] })
       return
@@ -139,13 +149,13 @@ const textOnly = () => {
     <section class="panel" role="dialog" aria-modal="true" :aria-label="t.shareTitle">
       <div class="grab" aria-hidden="true" />
       <header>
-        <h2 class="display">{{ t.shareTitle }}</h2>
+        <h2 class="display">{{ prMode ? t.newPr : t.shareTitle }}</h2>
         <button type="button" class="x" :aria-label="t.done" @click="close">
           <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
       </header>
 
-      <div class="seg" role="group">
+      <div v-if="!prMode" class="seg" role="group">
         <button type="button" :class="{ on: format === 'story' }" :aria-pressed="format === 'story'" @click="setFormat('story')">{{ t.fmtStory }}</button>
         <button type="button" :class="{ on: format === 'square' }" :aria-pressed="format === 'square'" @click="setFormat('square')">{{ t.fmtSquare }}</button>
       </div>
@@ -156,19 +166,19 @@ const textOnly = () => {
           :key="tp.id"
           type="button"
           class="item"
-          :class="{ on: app.s.share.template === tp.id, photo: tp.id === 'foto' }"
+          :class="{ on: current === tp.id, photo: tp.id === 'foto' }"
           :data-t="tp.id"
           :aria-label="tp.name[app.s.lang]"
-          :aria-pressed="app.s.share.template === tp.id"
+          :aria-pressed="current === tp.id"
           @click="pick(tp.id)"
         >
           <CardCanvas :data="data" :cstyle="{ ...style, template: tp.id }" />
         </button>
       </div>
       <div class="cap">
-        <span class="name display">{{ list.find((x) => x.id === app.s.share.template)?.name[app.s.lang] }}</span>
+        <span class="name display">{{ list.find((x) => x.id === current)?.name[app.s.lang] }}</span>
         <span class="dots" aria-hidden="true">
-          <i v-for="tp in list" :key="tp.id" :class="{ on: tp.id === app.s.share.template }" />
+          <i v-for="tp in list" :key="tp.id" :class="{ on: tp.id === current }" />
         </span>
       </div>
 
@@ -192,7 +202,7 @@ const textOnly = () => {
       </div>
 
       <div class="toggles">
-        <button type="button" :class="{ on: app.s.share.plates }" :aria-pressed="app.s.share.plates" @click="app.s.share.plates = !app.s.share.plates">{{ t.showPlates }}</button>
+        <button v-if="!prMode" type="button" :class="{ on: app.s.share.plates }" :aria-pressed="app.s.share.plates" @click="app.s.share.plates = !app.s.share.plates">{{ t.showPlates }}</button>
         <button type="button" :class="{ on: app.s.share.date }" :aria-pressed="app.s.share.date" @click="app.s.share.date = !app.s.share.date">{{ t.showDate }}</button>
         <button type="button" :class="{ on: app.s.share.link }" :aria-pressed="app.s.share.link" @click="app.s.share.link = !app.s.share.link">{{ t.showLink }}</button>
       </div>
@@ -211,7 +221,7 @@ const textOnly = () => {
           {{ t.shareImage }}
         </button>
       </div>
-      <button type="button" class="txt" @click="textOnly">{{ t.shareTextOnly }}</button>
+      <button v-if="!prMode" type="button" class="txt" @click="textOnly">{{ t.shareTextOnly }}</button>
     </section>
   </div>
 </template>
