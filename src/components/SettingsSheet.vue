@@ -53,6 +53,12 @@ function setQuick(i: number, e: Event) {
   const n = parseNumber((e.target as HTMLInputElement).value)
   if (n !== null && n >= 1 && n <= 200) s.quick[i] = n
 }
+function showSteps() {
+  s.steps.hidden = false
+  ui.stepsOpen = true
+  ui.open.settings = false
+  setTimeout(() => document.querySelector('main.screen')?.scrollTo({ top: 0, behavior: 'smooth' }), 0)
+}
 const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
   s[k] = v
 }
@@ -205,7 +211,7 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
           <span class="bt"><span>{{ t.guideBtn }}</span></span>
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
         </button>
-        <button type="button" class="brow link" @click="s.steps.hidden = false; ui.open.settings = false">
+        <button type="button" class="brow link" @click="showSteps">
           <span class="bt"><span>{{ t.stReopen }}</span><small>{{ t.stReopenH }}</small></span>
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
         </button>
