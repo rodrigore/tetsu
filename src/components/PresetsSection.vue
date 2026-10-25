@@ -13,14 +13,14 @@ const toast = useToast()
 const label = (p: Preset) => (typeof p.name === 'string' ? p.name : p.name[app.s.lang])
 
 function apply(p: Preset) {
-  Object.assign(app.s, p.vals)
+  Object.assign(app.s, JSON.parse(JSON.stringify(p.vals)))
   app.s.presetId = p.id
 }
 function save() {
   const nm = name.value.trim().toLocaleUpperCase(app.s.lang).slice(0, 14)
   if (!nm) return
   const vals: Preset['vals'] = {}
-  for (const k of PRESET_KEYS) (vals as Record<string, unknown>)[k] = app.s[k]
+  for (const k of PRESET_KEYS) (vals as Record<string, unknown>)[k] = JSON.parse(JSON.stringify(app.s[k]))
   const id = `p${Date.now()}`
   app.s.presets.push({ id, name: nm, vals })
   app.s.presetId = id
