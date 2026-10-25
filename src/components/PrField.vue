@@ -5,6 +5,7 @@ import { fmt } from '../core/format'
 import { messages } from '../core/i18n'
 import { useUi } from '../stores/ui'
 import { fromKg, parseNumber, toKg } from '../core/units'
+import { selectAll } from '../core/selectAll'
 
 const app = useApp()
 const ui = useUi()
@@ -19,14 +20,17 @@ function onInput(e: Event) {
   const v = (e.target as HTMLInputElement).value
   raw.value = v
   const n = parseNumber(v)
-  if (n !== null && n <= 1000) app.lift.kg = toKg(n, app.s.unit)
+  if (n !== null && n <= 1000) {
+    app.lift.kg = toKg(n, app.s.unit)
+    app.lift.example = false
+  }
 }
 </script>
 
 <template>
   <div class="pr">
    <div>
-    <label for="pr-input" class="lbl">{{ app.liftName(app.lift) }} · PR</label>
+    <label for="pr-input" class="lbl">{{ app.liftName(app.lift) }} · PR<span v-if="app.lift.example" class="ex">{{ t.example }}</span></label>
     <div class="line">
       <input
         id="pr-input"
@@ -36,6 +40,7 @@ function onInput(e: Event) {
         :value="raw ?? shown"
         :aria-label="t.prAria"
         @input="onInput"
+        @focus="selectAll"
         @blur="raw = null"
       />
       <span class="unit">{{ app.s.unit.toUpperCase() }}</span>
@@ -100,6 +105,15 @@ function onInput(e: Event) {
 }
 .lbl {
   white-space: nowrap;
+}
+.ex {
+  margin-left: 8px;
+  padding: 2px 6px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--accent);
+  font-size: 0.85em;
+  letter-spacing: 0.1em;
 }
 @media (orientation: landscape) and (max-height: 500px) {
   .field {

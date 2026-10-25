@@ -8,6 +8,10 @@ export interface Lift {
   id: string
   name: string | { en: string; es: string }
   kg: number
+  /** Last percentage used with this lift. */
+  pct?: number
+  /** Sample lift that has not been edited yet. */
+  example?: boolean
 }
 
 export interface Bar {
@@ -58,6 +62,11 @@ export interface Settings {
   guideDone: boolean
   /** Bumped when a default changes in a way existing installs should pick up once. */
   schema: number
+  /** Plate ids per side that are on the bar right now (marked by the user). */
+  onBar: string[] | null
+  /** Warm-up percentages of the working weight. */
+  warm: number[]
+  installDismissed: boolean
 }
 
 const KEY = 'tetsu:v1'
@@ -84,11 +93,11 @@ const defaults = (): Settings => ({
   collarKg: 0,
   inventory: {},
   lifts: [
-    { id: 'back', name: { en: 'BACK SQUAT', es: 'SENTADILLA TRASERA' }, kg: 140 },
-    { id: 'front', name: { en: 'FRONT SQUAT', es: 'SENTADILLA FRONTAL' }, kg: 115 },
-    { id: 'deadlift', name: { en: 'DEADLIFT', es: 'PESO MUERTO' }, kg: 180 },
-    { id: 'snatch', name: { en: 'SNATCH', es: 'ARRANQUE' }, kg: 85 },
-    { id: 'clean', name: { en: 'CLEAN', es: 'CARGADA' }, kg: 100 },
+    { id: 'back', name: { en: 'BACK SQUAT', es: 'SENTADILLA TRASERA' }, kg: 140, example: true },
+    { id: 'front', name: { en: 'FRONT SQUAT', es: 'SENTADILLA FRONTAL' }, kg: 115, example: true },
+    { id: 'deadlift', name: { en: 'DEADLIFT', es: 'PESO MUERTO' }, kg: 180, example: true },
+    { id: 'snatch', name: { en: 'SNATCH', es: 'ARRANQUE' }, kg: 85, example: true },
+    { id: 'clean', name: { en: 'CLEAN', es: 'CARGADA' }, kg: 100, example: true },
   ],
   liftId: 'back',
   pct: 85,
@@ -110,6 +119,9 @@ const defaults = (): Settings => ({
   presetId: null,
   guideDone: false,
   schema: 2,
+  onBar: null,
+  warm: [40, 60, 80],
+  installDismissed: false,
 })
 
 function load(): Settings {
@@ -152,6 +164,11 @@ export const useApp = defineStore('app', () => {
 
   const lift = computed(() => s.lifts.find((l) => l.id === s.liftId) ?? s.lifts[0]!)
   const bar = computed(() => s.bars[s.barIndex] ?? s.bars[0]!)
+
+  // Each lift remembers its own percentage; switching lift restores it.
+  if (lift.value.pct !== undefined) s.pct = lift.value.pct
+  watch(() => s.pct, (v) => { lift.value.pct = v }, { flush: 'sync' })
+  watch(() => s.liftId, () => { s.pct = lift.value.pct ?? s.pct }, { flush: 'sync' })
 
   const liftName = (l: Lift) =>
     (typeof l.name === 'string' ? l.name : l.name[s.lang]).toLocaleUpperCase(s.lang)

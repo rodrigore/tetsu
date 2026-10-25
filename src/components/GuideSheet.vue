@@ -6,6 +6,7 @@ import { messages } from '../core/i18n'
 import { fmtW } from '../core/format'
 import LayoutPreview from './LayoutPreview.vue'
 import LiftsEditor from './LiftsEditor.vue'
+import PercentList from './PercentList.vue'
 import Section from './Section.vue'
 import Seg from './Seg.vue'
 
@@ -13,9 +14,9 @@ const app = useApp()
 const ui = useUi()
 const t = computed(() => messages(app.s.lang))
 const step = computed(() => ui.open.guide)
-const STEPS = 5
-const titles = computed(() => [t.value.g1, t.value.gv, t.value.g2, t.value.g3, t.value.g4])
-const hints = computed(() => [t.value.g1h, t.value.gvh, t.value.g2h, t.value.g3h, t.value.g4h])
+const STEPS = 6
+const titles = computed(() => [t.value.g1, t.value.gv, t.value.g2, t.value.g3, t.value.gw, t.value.g4])
+const hints = computed(() => [t.value.g1h, t.value.gvh, t.value.g2h, t.value.g3h, t.value.gwh, t.value.g4h])
 
 const presetLabel = (p: Preset) => (typeof p.name === 'string' ? p.name : p.name[app.s.lang])
 function applyPreset(p: Preset) {
@@ -98,6 +99,12 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
 
       <template v-else-if="step === 4">
         <LiftsEditor />
+      </template>
+
+      <template v-else-if="step === 5">
+        <Section :title="t.warmSettings" :hint="t.warmHint">
+          <PercentList v-model="app.s.warm" :min="1" :max="99" :max-items="5" />
+        </Section>
       </template>
 
       <template v-else>

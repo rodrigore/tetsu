@@ -3,10 +3,12 @@ import { computed, ref } from 'vue'
 import { PRESET_KEYS, useApp, type Preset } from '../stores/app'
 import { messages } from '../core/i18n'
 import Section from './Section.vue'
+import { useToast } from '../stores/toast'
 
 const app = useApp()
 const t = computed(() => messages(app.s.lang))
 const name = ref('')
+const toast = useToast()
 
 const label = (p: Preset) => (typeof p.name === 'string' ? p.name : p.name[app.s.lang])
 
@@ -25,8 +27,14 @@ function save() {
   name.value = ''
 }
 function remove(p: Preset) {
+  const before = app.s.presets
+  const beforeId = app.s.presetId
   app.s.presets = app.s.presets.filter((x) => x.id !== p.id)
   if (app.s.presetId === p.id) app.s.presetId = null
+  toast.show(t.value.removedProfile, () => {
+    app.s.presets = before
+    app.s.presetId = beforeId
+  })
 }
 </script>
 

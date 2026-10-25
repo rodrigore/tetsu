@@ -63,3 +63,29 @@ describe('solve', () => {
     )
   })
 })
+
+describe('limits', () => {
+  it('flags a target above what the plates can load', () => {
+    const r = solve({ targetKg: 500, barKg: 20, plates: [kg(10, 2)] })
+    expect(r.unreachable).toBe(true)
+    expect(r.maxTotalKg).toBe(60)
+    expect(r.totalKg).toBe(60)
+  })
+
+  it('does not flag a reachable target', () => {
+    const r = solve({ targetKg: 60, barKg: 20, plates: [kg(10, 2)] })
+    expect(r.unreachable).toBe(false)
+  })
+
+  it('counts collars in the maximum', () => {
+    const r = solve({ targetKg: 500, barKg: 20, collarKg: 2.5, plates: [kg(10, 1)] })
+    expect(r.maxTotalKg).toBe(20 + 5 + 20)
+  })
+
+  it('flags a target lighter than the bar', () => {
+    const r = solve({ targetKg: 12, barKg: 20, plates: GYM })
+    expect(r.belowBar).toBe(true)
+    expect(r.totalKg).toBe(20)
+    expect(solve({ targetKg: 20, barKg: 20, plates: GYM }).belowBar).toBe(false)
+  })
+})

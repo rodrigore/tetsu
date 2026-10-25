@@ -15,11 +15,17 @@ import PlateChips from './components/PlateChips.vue'
 import PrField from './components/PrField.vue'
 import SettingsSheet from './components/SettingsSheet.vue'
 import StatsStrip from './components/StatsStrip.vue'
+import ChangeStrip from './components/ChangeStrip.vue'
+import WarmupSheet from './components/WarmupSheet.vue'
+import Toast from './components/Toast.vue'
+import InstallHint from './components/InstallHint.vue'
+import { useToast } from './stores/toast'
 import GuideSheet from './components/GuideSheet.vue'
 import { useWakeLock } from './core/useWakeLock'
 
 const app = useApp()
 const ui = useUi()
+const toast = useToast()
 
 // "auto" follows the phone's light/dark setting.
 const mq = window.matchMedia('(prefers-color-scheme: light)')
@@ -43,8 +49,27 @@ watchEffect(() => {
 useWakeLock(computed(() => app.s.awake))
 if (!app.s.guideDone) ui.open.guide = 1
 
-const { t, used, looks, chips, hero, targetKg, result, diffText, exact } = useLoad(() => isLight.value)
+const { t, used, looks, chips, hero, targetKg, result, diffText, exact, notice, plateInfo, shareMessage } = useLoad(() => isLight.value)
 const full = computed(() => app.s.look === 'full')
+
+// Native share sheet where it exists (iPhone), clipboard otherwise.
+async function share() {
+  const text = shareMessage()
+  try {
+    if (navigator.share) {
+      await navigator.share({ text })
+      return
+    }
+  } catch (e) {
+    if ((e as DOMException).name === 'AbortError') return
+  }
+  try {
+    await navigator.clipboard.writeText(text)
+    toast.show(t.value.copied)
+  } catch {
+    toast.show(text, undefined, 12000)
+  }
+}
 </script>
 
 <template>
@@ -54,8 +79,9 @@ const full = computed(() => app.s.look === 'full')
       <LiftTabs class="o-lifts" />
       <PrField class="o-pr" />
     </div>
-    <HeroValue class="o-hero" :hero="hero" />
+    <HeroValue class="o-hero" :hero="hero" :notice="notice" />
     <BarView class="o-bar" :used="used" :looks="looks" />
+    <ChangeStrip class="o-actions" :used="used" :info="plateInfo" @share="share" />
     <PlateChips v-if="full" class="o-chips" :chips="chips" :empty="used.length === 0" :empty-text="t.emptyBar" />
     <StatsStrip v-if="full" class="o-stats" :t="t" :target-kg="targetKg" :total-kg="result.totalKg" :diff-text="diffText" :exact="exact" />
     <PctControl class="o-pct" />
@@ -63,7 +89,10 @@ const full = computed(() => app.s.look === 'full')
   <SettingsSheet v-if="ui.open.settings" />
   <InventorySheet v-if="ui.open.inventory" />
   <LiftsSheet v-if="ui.open.lifts" />
+  <WarmupSheet v-if="ui.open.warmup" />
   <GuideSheet v-if="ui.open.guide" />
+  <InstallHint />
+  <Toast />
 </template>
 
 <style scoped>
@@ -87,7 +116,8 @@ const full = computed(() => app.s.look === 'full')
     padding-bottom: max(14px, env(safe-area-inset-bottom));
   }
 }
-.screen > :deep(*) {
+.screen > :deep(*),
+.col-left > :deep(*) {
   flex: none;
 }
 .col-left {
@@ -98,12 +128,14 @@ const full = computed(() => app.s.look === 'full')
 .o-pr { order: 2; }
 .o-hero { order: 3; }
 .o-bar { order: 4; }
+.o-actions { order: 5; }
 .o-chips { order: 6; }
 .o-stats { order: 7; }
 .o-pct { order: 8; }
 /* One-hand: results on top, selectors near the thumb. */
 .one-hand .o-hero { order: 0; }
 .one-hand .o-bar { order: 1; }
+.one-hand .o-actions { order: 2; }
 .one-hand .o-chips { order: 3; }
 .one-hand .o-stats { order: 4; }
 .one-hand .o-header { order: 5; }
@@ -140,5 +172,6 @@ const full = computed(() => app.s.look === 'full')
   .col-left > :deep(*) { order: 0 !important; }
   .screen :deep(.hint) { display: none; }
   .screen > :deep(.o-stats) { display: none; }
+  .screen > :deep(.o-actions) { display: none; }
 }
 </style>

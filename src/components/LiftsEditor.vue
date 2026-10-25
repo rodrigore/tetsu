@@ -4,23 +4,37 @@ import { useApp, type Lift } from '../stores/app'
 import { messages } from '../core/i18n'
 import { fmt } from '../core/format'
 import { fromKg, parseNumber, toKg } from '../core/units'
+import { selectAll } from '../core/selectAll'
+import { useToast } from '../stores/toast'
 import Section from './Section.vue'
 
 const app = useApp()
 const t = computed(() => messages(app.s.lang))
+const toast = useToast()
 
 const nameOf = (l: Lift) => (typeof l.name === 'string' ? l.name : l.name[app.s.lang])
-const setName = (l: Lift, e: Event) => (l.name = (e.target as HTMLInputElement).value)
+function setName(l: Lift, e: Event) {
+  l.name = (e.target as HTMLInputElement).value
+  l.example = false
+}
 const prText = (l: Lift) => fmt(fromKg(l.kg, app.s.unit), app.s.lang)
 function setPr(l: Lift, e: Event) {
   const n = parseNumber((e.target as HTMLInputElement).value)
-  if (n !== null && n <= 1000) l.kg = toKg(n, app.s.unit)
-  else (e.target as HTMLInputElement).value = prText(l)
+  if (n !== null && n <= 1000) {
+    l.kg = toKg(n, app.s.unit)
+    l.example = false
+  } else (e.target as HTMLInputElement).value = prText(l)
 }
 function remove(l: Lift) {
   if (app.s.lifts.length <= 1) return
+  const before = JSON.parse(JSON.stringify(app.s.lifts)) as Lift[]
+  const beforeId = app.s.liftId
   app.s.lifts = app.s.lifts.filter((x) => x.id !== l.id)
   if (app.s.liftId === l.id) app.s.liftId = app.s.lifts[0]!.id
+  toast.show(t.value.removedLift, () => {
+    app.s.lifts = before
+    app.s.liftId = beforeId
+  })
 }
 
 const newName = ref('')
@@ -46,7 +60,8 @@ function add() {
     <p class="hint">{{ t.liftsHint }}</p>
     <div v-for="l in app.s.lifts" :key="l.id" class="row">
       <input class="name" type="text" :value="nameOf(l)" :aria-label="nameOf(l)" @change="setName(l, $event)" />
-      <input class="pr display" type="text" inputmode="decimal" :value="prText(l)" :aria-label="`PR ${nameOf(l)}`" @change="setPr(l, $event)" />
+      <input class="pr display" type="text" inputmode="decimal" :value="prText(l)" :aria-label="`PR ${nameOf(l)}`" @focus="selectAll" @change="setPr(l, $event)" />
+      <span v-if="l.example" class="ex">{{ t.example }}</span>
       <span class="u">{{ app.s.unit.toUpperCase() }}</span>
       <button v-if="app.s.lifts.length > 1" type="button" :aria-label="`${t.removeAria} ${nameOf(l)}`" @click="remove(l)">×</button>
     </div>
@@ -100,6 +115,15 @@ input {
 .pr {
   width: 64px;
   font-size: 24px;
+}
+.ex {
+  padding: 2px 5px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--accent);
+  font-size: calc(10px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 .u {
   font-size: calc(14px * var(--ts));

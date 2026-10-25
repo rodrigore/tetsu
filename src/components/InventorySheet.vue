@@ -9,9 +9,11 @@ import { toKg, type Unit } from '../core/units'
 import Sheet from './Sheet.vue'
 import Section from './Section.vue'
 import AddRow from './AddRow.vue'
+import { useToast } from '../stores/toast'
 
 const app = useApp()
 const ui = useUi()
+const toast = useToast()
 const t = computed(() => messages(app.s.lang))
 const rows = computed(() => allPlates(app.s.customPlates))
 const count = (id: string) => app.s.inventory[id] ?? defaultPairs(id)
@@ -33,8 +35,15 @@ function addPlate(value: number, unit: Unit) {
 }
 function removeCustom(id: string) {
   const i = app.s.customPlates.findIndex((p) => `c:${p.value}${p.unit}` === id)
-  if (i >= 0) app.s.customPlates.splice(i, 1)
+  if (i < 0) return
+  const plate = { ...app.s.customPlates[i]! }
+  const pairs = app.s.inventory[id]
+  app.s.customPlates.splice(i, 1)
   delete app.s.inventory[id]
+  toast.show(t.value.removedPlate, () => {
+    app.s.customPlates.splice(i, 0, plate)
+    if (pairs !== undefined) app.s.inventory[id] = pairs
+  })
 }
 </script>
 

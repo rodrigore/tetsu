@@ -26,6 +26,12 @@ export interface SolveResult {
   totalKg: number
   /** totalKg - targetKg (positive = over). */
   diffKg: number
+  /** Heaviest total reachable with every plate you own. */
+  maxTotalKg: number
+  /** The target is above what your plates can load. */
+  unreachable: boolean
+  /** The target is lighter than the empty bar (with collars). */
+  belowBar: boolean
 }
 
 const UNIT = 100 // integer weights in 0.01 kg
@@ -106,6 +112,17 @@ export function solve(input: SolveInput): SolveResult {
   }
 
   const loadedSideKg = perSide.reduce((a, p) => a + toKg(p.value, p.unit), 0)
-  const totalKg = barKg + 2 * collarKg + 2 * loadedSideKg
-  return { perSide, loadedSideKg, totalKg, diffKg: totalKg - targetKg }
+  const base = barKg + 2 * collarKg
+  const totalKg = base + 2 * loadedSideKg
+  const maxSideKg = defs.reduce((a, d) => a + d.kg * d.p.pairs, 0)
+  const maxTotalKg = base + 2 * maxSideKg
+  return {
+    perSide,
+    loadedSideKg,
+    totalKg,
+    diffKg: totalKg - targetKg,
+    maxTotalKg,
+    unreachable: targetKg > maxTotalKg + 0.05,
+    belowBar: targetKg < base - 0.05,
+  }
 }

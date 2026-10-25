@@ -5,6 +5,7 @@ import { LANDSCAPE_PHONE, useMq } from '../core/useMq'
 
 const props = defineProps<{
   hero: { side: boolean; text: string; unit: string; other: string; otherUnit: string; label: string; minLine: string }
+  notice?: string
 }>()
 const app = useApp()
 
@@ -37,6 +38,7 @@ const otherSize = computed(() => (landscape.value ? 30 : fit.value))
       </template>
     </div>
     <div v-if="(!full || landscape) && hero.minLine" class="min">{{ hero.minLine }}</div>
+    <div v-if="notice" class="notice" role="alert">{{ notice }}</div>
   </div>
 </template>
 
@@ -74,6 +76,17 @@ const otherSize = computed(() => (landscape.value ? 30 : fit.value))
   font-size: 26px;
   letter-spacing: 0.04em;
   color: var(--accent);
+}
+.notice {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: calc(15px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
 }
 .slash {
   color: var(--muted);

@@ -2,6 +2,7 @@ import { computed } from 'vue'
 import { useApp } from '../stores/app'
 import { allPlates, defaultPairs } from './catalog'
 import { fmt, fmtW } from './format'
+import { shareText } from './shareText'
 import { messages } from './i18n'
 import { paletteOf } from './palette'
 import { plateLook } from './plateView'
@@ -94,5 +95,34 @@ export function useLoad(isLight: () => boolean) {
     return { side, text, unit, other, otherUnit: otherUnit.value.toUpperCase(), label, minLine }
   })
 
-  return { t, f, U, result, used, looks, chips, hero, targetKg, diffText, exact }
+  const w = (kg: number) => `${f(fromKg(kg, app.s.unit))} ${U.value}`
+
+  /** Warning shown under the main value when the target cannot be loaded as asked. */
+  const notice = computed(() => {
+    if (result.value.unreachable) return `${t.value.maxIs} ${w(result.value.maxTotalKg)}`
+    if (result.value.belowBar) return `${t.value.belowBar} (${w(barKg.value + 2 * app.s.collarKg)})`
+    return ''
+  })
+
+  /** Label and unit of a plate id, for the change strip and warm-up sheet. */
+  const plateInfo = (id: string) => {
+    const p = allPlates(app.s.customPlates).find((x) => x.id === id)
+    return p ? { label: fmtW(p.value, app.s.lang), unit: p.unit.toUpperCase() } : { label: id, unit: '' }
+  }
+
+  const shareMessage = () =>
+    shareText({
+      lang: app.s.lang,
+      unit: app.s.unit,
+      liftName: app.liftName(app.lift),
+      pct: app.s.pct,
+      prKg: app.lift.kg,
+      targetKg: targetKg.value,
+      totalKg: result.value.totalKg,
+      barLabel: `${fmtW(app.bar.value, app.s.lang)} ${app.bar.unit.toUpperCase()}`,
+      plates: used.value.map((p) => ({ value: p.value, unit: p.unit })),
+      sideKg: result.value.loadedSideKg,
+    })
+
+  return { t, f, U, result, used, looks, chips, hero, targetKg, diffText, exact, notice, plates, barKg, plateInfo, shareMessage }
 }

@@ -11,11 +11,14 @@ import Section from './Section.vue'
 import Seg from './Seg.vue'
 import AddRow from './AddRow.vue'
 import PresetsSection from './PresetsSection.vue'
+import PercentList from './PercentList.vue'
+import { useToast } from '../stores/toast'
 
 const app = useApp()
 const ui = useUi()
 const t = computed(() => messages(app.s.lang))
 const s = app.s
+const toast = useToast()
 
 const tabs = computed(() => [
   { value: 'display' as const, label: t.value.tabDisplay },
@@ -34,8 +37,14 @@ function addBar(value: number, unit: Unit) {
 }
 function removeBar(i: number) {
   if (s.bars.length <= 1) return
+  const before = s.bars.map((b) => ({ ...b }))
+  const beforeIndex = s.barIndex
   s.bars.splice(i, 1)
   s.barIndex = Math.min(s.barIndex, s.bars.length - 1)
+  toast.show(t.value.removedBar, () => {
+    s.bars = before
+    s.barIndex = beforeIndex
+  })
 }
 
 const collarOpts = [0, 0.25, 2.5].map((v) => ({ value: v }))
@@ -160,6 +169,9 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
       </Section>
       <Section :title="t.pctStepTitle">
         <Seg :model-value="s.pstep" :options="[1, 2.5, 5].map((v) => ({ value: v, label: fmt(v, s.lang) + '%' }))" @update:model-value="set('pstep')($event)" />
+      </Section>
+      <Section :title="t.warmSettings" :hint="t.warmHint">
+        <PercentList v-model="s.warm" :min="1" :max="99" :max-items="5" />
       </Section>
       <Section :title="t.quickTitle" :hint="t.quickHint">
         <div class="quick">

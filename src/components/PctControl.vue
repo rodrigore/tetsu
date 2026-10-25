@@ -4,6 +4,7 @@ import { useApp } from '../stores/app'
 import { fmt } from '../core/format'
 import { messages } from '../core/i18n'
 import { fromKg, parseNumber } from '../core/units'
+import { selectAll } from '../core/selectAll'
 
 const app = useApp()
 const t = computed(() => messages(app.s.lang))
@@ -39,6 +40,7 @@ function onInput(e: Event) {
           :value="raw ?? fmt(app.s.pct, app.s.lang)"
           :aria-label="t.pctAria"
           @input="onInput"
+          @focus="selectAll"
           @blur="raw = null"
         />
         <span class="display sign">%</span>
