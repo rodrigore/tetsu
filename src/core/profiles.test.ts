@@ -26,7 +26,7 @@ describe('profiles', () => {
     applyProfile(app.s, 'box')
     expect(app.s.unit).toBe('kg')
     expect(app.s.hero).toBe('target')
-    expect(app.s.oneHand).toBe(true)
+    expect(app.s.layout.id).toBe('onehand')
   })
 
   it('can be undone', () => {

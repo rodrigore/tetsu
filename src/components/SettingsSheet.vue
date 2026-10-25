@@ -26,6 +26,7 @@ const tabs = computed(() => [
   { value: 'general' as const, label: t.value.tabGeneral },
 ])
 
+const layName = computed(() => ({ simple: t.value.laySimple, complete: t.value.layComplete, onehand: t.value.layOne, custom: t.value.layCustom })[s.layout.id])
 const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, s.lang)} ${b.unit.toUpperCase()}`
 
 function addBar(value: number, unit: Unit) {
@@ -130,8 +131,8 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
           </button>
         </div>
       </Section>
-      <Section :title="t.style" :hint="s.look === 'full' ? t.styleHintFull : t.styleHintMin">
-        <Seg :model-value="s.look" :options="[{ value: 'full', label: t.full }, { value: 'minimal', label: t.minimal }]" @update:model-value="set('look')($event)" />
+      <Section :title="t.layTitle" :hint="t.layLandscape">
+        <button type="button" class="wide" @click="ui.open.layout = true">{{ t.layCurrent }}: {{ layName }}</button>
       </Section>
       <Section :title="t.textSize">
         <Seg :model-value="s.tsize" :options="[{ value: 'normal', label: t.normal }, { value: 'large', label: t.large }]" @update:model-value="set('tsize')($event)" />
@@ -148,9 +149,6 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
       </Section>
       <Section :title="t.plateColors" :hint="t.pcolHint">
         <Seg :model-value="s.olympic" :options="[{ value: false, label: t.byUnit }, { value: true, label: t.olympic }]" @update:model-value="set('olympic')($event)" />
-      </Section>
-      <Section :title="t.oneHandTitle" :hint="t.oneHandHint">
-        <Seg :model-value="s.oneHand" :options="[{ value: false, label: t.no }, { value: true, label: t.yes }]" @update:model-value="set('oneHand')($event)" />
       </Section>
       <Section :title="t.orientTitle" :hint="t.orientHint">
         <Seg :model-value="s.porient" :options="[{ value: 'vertical', label: t.vertical }, { value: 'horizontal', label: t.horizontal }]" @update:model-value="set('porient')($event)" />
