@@ -1,4 +1,4 @@
-import { CATALOG, plateId } from './catalog'
+import { CATALOG, defaultPairs, plateId } from './catalog'
 import type { Bar, Settings } from '../stores/app'
 import type { Unit } from './units'
 
@@ -96,4 +96,15 @@ export function applyProfile(s: Settings, id: ProfileId): void {
   s.unit = p.unit
   if (p.vals.hero) s.hero = p.vals.hero
   if (p.vals.oneHand !== undefined) s.oneHand = p.vals.oneHand
+}
+
+/** The profile whose bars, unit and plates match the current settings, if any. */
+export function currentProfile(s: Settings): ProfileId | null {
+  for (const p of PROFILES) {
+    const inv = profileInventory(p)
+    const sameBars = s.bars.length === p.bars.length && s.bars.every((b, i) => b.value === p.bars[i]!.value && b.unit === p.bars[i]!.unit)
+    const samePlates = Object.entries(inv).every(([id, n]) => (s.inventory[id] ?? defaultPairs(id)) === n)
+    if (sameBars && samePlates && s.unit === p.unit) return p.id
+  }
+  return null
 }
