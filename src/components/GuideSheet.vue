@@ -5,8 +5,8 @@ import { useUi } from '../stores/ui'
 import { messages } from '../core/i18n'
 import { fmtW } from '../core/format'
 import { PLAN_TEMPLATES, activeTemplate } from '../core/plan'
-import { testSound } from '../core/beep'
-import RestInput from './RestInput.vue'
+import RestField from './RestField.vue'
+import SoundField from './SoundField.vue'
 import LayoutPreview from './LayoutPreview.vue'
 import LiftsEditor from './LiftsEditor.vue'
 import PercentList from './PercentList.vue'
@@ -131,15 +131,14 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
           </div>
         </Section>
         <Section :title="t.gtRest">
-          <RestInput v-model="app.s.plan.rest" />
+          <RestField v-model="app.s.plan.rest" />
         </Section>
         <Section :title="t.trAuto">
           <Seg v-model="app.s.plan.auto" :options="yesNo" />
         </Section>
         <Section :title="t.trSound">
           <Seg v-model="app.s.plan.sound" :options="yesNo" />
-          <button type="button" class="test" @click="testSound()">{{ t.trTestSound }}</button>
-          <div class="h">{{ t.trSilentHint }}</div>
+          <SoundField />
         </Section>
         <Section :title="t.prFormula" :hint="t.gtFormulaHint">
           <Seg v-model="app.s.e1rm" :options="[{ value: 'epley', label: 'EPLEY' }, { value: 'brzycki', label: 'BRZYCKI' }]" />
@@ -245,43 +244,6 @@ p {
   background: var(--accent);
   color: var(--on);
   border-color: var(--accent);
-}
-.test {
-  align-self: flex-start;
-  height: 44px;
-  padding: 0 18px;
-  border-radius: 22px;
-  border: 1px solid var(--accent);
-  background: transparent;
-  color: var(--accent);
-  font-size: calc(16px * var(--ts));
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-.h {
-  font-size: calc(14px * var(--ts));
-  color: var(--muted);
-  letter-spacing: 0.02em;
-  line-height: 1.3;
-}
-.stepper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.stepper button {
-  width: 52px;
-  height: 48px;
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--line2);
-  font-size: 26px;
-}
-.stepper output {
-  min-width: 80px;
-  text-align: center;
-  font-size: 34px;
 }
 .tour {
   list-style: none;
