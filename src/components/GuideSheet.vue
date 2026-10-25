@@ -91,11 +91,12 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
           </div>
           <div v-if="presetDesc" class="pdesc">{{ presetDesc }}</div>
         </Section>
-        <Section :title="t.oneHandTitle">
-          <Seg v-model="app.s.oneHand" :options="[{ value: false, label: t.no }, { value: true, label: t.yes }]" />
-        </Section>
-        <Section :title="t.style">
-          <Seg v-model="app.s.look" :options="[{ value: 'full', label: t.full }, { value: 'minimal', label: t.minimal }]" />
+        <Section :title="t.layTitle">
+          <Seg
+            :model-value="app.s.layout.id"
+            :options="[{ value: 'simple', label: t.laySimple }, { value: 'complete', label: t.layComplete }, { value: 'onehand', label: t.layOne }]"
+            @update:model-value="app.s.layout.id = $event"
+          />
         </Section>
       </template>
 

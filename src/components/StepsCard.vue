@@ -4,6 +4,7 @@ import { useApp } from '../stores/app'
 import { useUi } from '../stores/ui'
 import { useToast } from '../stores/toast'
 import { messages } from '../core/i18n'
+import { focusPr } from '../core/focusPr'
 
 const app = useApp()
 const ui = useUi()
@@ -27,7 +28,7 @@ const steps = computed<Step[]>(() => [
   { id: 'plates', title: t.value.stPlates, done: app.s.guideDone },
   {
     id: 'pr', title: t.value.stPr, sub: t.value.stPrH, done: app.s.lifts.some((l) => !l.example), go: t.value.stGoPr,
-    act: () => (document.getElementById('pr-input') as HTMLInputElement | null)?.focus(),
+    act: focusPr,
   },
   { id: 'warm', title: t.value.stWarm, sub: t.value.stWarmH, done: app.s.steps.warm, go: t.value.stGoWarm, act: () => { ui.open.warmup = true; app.s.steps.warm = true } },
   {

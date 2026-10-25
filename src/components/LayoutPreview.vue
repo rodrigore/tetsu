@@ -1,20 +1,29 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useApp } from '../stores/app'
+import { placement, resolve, type BlockId, type LayoutSetting } from '../core/layout'
 
+const props = defineProps<{ layout?: LayoutSetting; label?: string }>()
 const app = useApp()
+const place = computed(() => placement(resolve(props.layout ?? app.s.layout)))
+const show = (b: BlockId) => place.value[b].show
+const at = (b: BlockId, n = 0) => ({ order: place.value[b].rank * 10 + n })
+const lowHead = computed(() => place.value.head.rank > place.value.hero.rank)
 </script>
 
 <template>
-  <div class="phone" :class="{ one: app.s.oneHand, minimal: app.s.look === 'minimal' }" role="img" :aria-label="app.s.oneHand ? 'Una mano' : 'Normal'">
-    <div class="blk head"><i /><i /></div>
-    <div class="blk lifts"><i class="on" /><i /><i /></div>
-    <div class="blk pr"><i /><b /></div>
-    <div class="blk hero"><i /><i class="big" /></div>
-    <div class="blk bar"><span class="rod" /><span class="pl p1" /><span class="pl p2" /><span class="pl p3" /></div>
-    <div v-if="app.s.look === 'full'" class="blk chips"><i /><i /><i /></div>
-    <div v-if="app.s.look === 'full'" class="blk strip"><i /><i /><i /></div>
-    <div class="blk pct"><i class="num" /><span class="dial" /></div>
-    <span class="thumb" aria-hidden="true" />
+  <div class="phone" :class="{ one: lowHead }" role="img" :aria-label="label ?? ''">
+    <template v-if="show('head')">
+      <div class="blk head" :style="at('head')"><i /><i /></div>
+      <div class="blk lifts" :style="at('head', 1)"><i class="on" /><i /><i /></div>
+    </template>
+    <div v-if="show('pr')" class="blk pr" :style="at('pr')"><i /><b /></div>
+    <div v-if="show('hero')" class="blk hero" :style="at('hero')"><i /><i class="big" /></div>
+    <div class="blk bar" :style="at('bar')"><span class="rod" /><span class="pl p1" /><span class="pl p2" /><span class="pl p3" /></div>
+    <div v-if="show('chips')" class="blk chips" :style="at('chips')"><i /><i /><i /></div>
+    <div v-if="show('stats')" class="blk strip" :style="at('stats')"><i /><i /><i /></div>
+    <div v-if="show('pct')" class="blk pct" :style="at('pct')"><i class="num" /><span class="dial" /></div>
+    <span v-if="lowHead" class="thumb" aria-hidden="true" />
   </div>
 </template>
 
@@ -48,21 +57,7 @@ const app = useApp()
   border-radius: 3px;
   background: var(--line2);
 }
-.head { order: 0; }
-.lifts { order: 1; }
-.pr { order: 2; }
-.hero { order: 3; }
-.bar { order: 4; flex: 1; position: relative; min-height: 40px; }
-.chips { order: 6; }
-.strip { order: 7; }
-.pct { order: 8; }
-.one .hero { order: 0; }
-.one .bar { order: 1; }
-.one .chips { order: 3; }
-.one .strip { order: 4; }
-.one .head { order: 5; }
-.one .lifts { order: 6; }
-.one .pr { order: 7; }
+.bar { flex: 1; position: relative; min-height: 40px; }
 .lifts i.on { background: var(--accent); }
 .pr b { flex: 0 0 22px; background: var(--accent); opacity: 0.55; }
 .hero { flex-direction: column; align-items: stretch; gap: 3px; }

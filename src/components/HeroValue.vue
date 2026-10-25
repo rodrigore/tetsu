@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useApp } from '../stores/app'
 import { LANDSCAPE_PHONE, useMq } from '../core/useMq'
 
 const props = defineProps<{
   hero: { side: boolean; text: string; unit: string; other: string; otherUnit: string; label: string; minLine: string }
   notice?: string
+  /** The screen also shows the plate list or the stats: the hero can be a bit smaller. */
+  full?: boolean
+  /** Size chosen in the layout. */
+  scale?: number
 }>()
-const app = useApp()
 
 const landscape = useMq(LANDSCAPE_PHONE)
 const short = useMq('(orientation: portrait) and (max-height: 780px)')
-const full = computed(() => app.s.look === 'full')
+const full = computed(() => props.full ?? false)
 const both = computed(() => props.hero.side && props.hero.other !== '')
-const base = computed(() => (landscape.value ? 48 : short.value ? (full.value ? 56 : 64) : full.value ? 64 : 76))
+const base = computed(() => Math.round((landscape.value ? 48 : short.value ? (full.value ? 56 : 64) : full.value ? 64 : 76) * (landscape.value ? 1 : (props.scale ?? 1))))
 const room = computed(() => (landscape.value ? 200 : 232))
 // Keep "main / other" on one line: shrink only when both numbers together would overflow.
 const fit = computed(() => {

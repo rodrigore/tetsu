@@ -6,6 +6,7 @@ import { messages } from '../core/i18n'
 import { fromKg, parseNumber } from '../core/units'
 import { selectAll } from '../core/selectAll'
 
+defineProps<{ full?: boolean }>()
 const app = useApp()
 const t = computed(() => messages(app.s.lang))
 
@@ -66,7 +67,7 @@ function onInput(e: Event) {
       :aria-label="t.pctAria"
       @input="set(Number(($event.target as HTMLInputElement).value))"
     />
-    <div v-if="app.s.look === 'full'" class="quick">
+    <div v-if="full" class="quick">
       <button
         v-for="q in app.s.quick"
         :key="q"

@@ -8,9 +8,9 @@ beforeEach(() => {
 })
 
 describe('app store', () => {
-  it('starts in the minimal view with example lifts', () => {
+  it('starts with the simple layout and example lifts', () => {
     const app = useApp()
-    expect(app.s.look).toBe('minimal')
+    expect(app.s.layout.id).toBe('simple')
     expect(app.s.lifts.every((l) => l.example)).toBe(true)
   })
 
@@ -32,14 +32,12 @@ describe('app store', () => {
     expect(app.s.pct).toBe(75)
   })
 
-  it('factory presets: BOX is one-hand, GIMNASIO is not', () => {
+  it('factory presets: BOX is one-hand, GIMNASIO is simple', () => {
     const app = useApp()
     const gym = app.s.presets.find((p) => p.id === 'gym')!
     const box = app.s.presets.find((p) => p.id === 'box')!
-    expect(gym.vals.oneHand).toBe(false)
-    expect(box.vals.oneHand).toBe(true)
-    expect(gym.vals.look).toBe('minimal')
-    expect(box.vals.look).toBe('minimal')
+    expect(gym.vals.layout?.id).toBe('simple')
+    expect(box.vals.layout?.id).toBe('onehand')
   })
 })
 

@@ -6,6 +6,7 @@ import type { Formula } from '../core/oneRm'
 import { DEFAULT_SOUND } from '../core/sounds'
 import { PLAN_TEMPLATES, type PlanSet } from '../core/plan'
 import type { RoundMode } from '../core/solver'
+import { defaultCustom, fromLegacy, type LayoutSetting } from '../core/layout'
 import type { Unit } from '../core/units'
 
 export interface Lift {
@@ -24,7 +25,7 @@ export interface Bar {
 }
 
 export const PRESET_KEYS = [
-  'look', 'hero', 'side', 'oneHand', 'tsize', 'contrast', 'theme', 'olympic', 'porient', 'showDiff', 'awake',
+  'layout', 'hero', 'side', 'tsize', 'contrast', 'theme', 'olympic', 'porient', 'showDiff', 'awake',
 ] as const
 
 export interface Preset {
@@ -41,6 +42,8 @@ export interface Settings {
   theme: 'auto' | 'dark' | 'light'
   accent: string
   look: 'full' | 'minimal'
+  /** Which blocks the main screen shows and in what order. */
+  layout: LayoutSetting
   hero: 'side' | 'target' | 'total'
   side: 'kg' | 'lb' | 'both'
   round: RoundMode
@@ -91,6 +94,7 @@ const defaults = (): Settings => ({
   theme: 'dark',
   accent: '#FF5A1F',
   look: 'minimal',
+  layout: { id: 'simple', custom: defaultCustom() },
   hero: 'side',
   side: 'both',
   round: 'near',
@@ -123,11 +127,11 @@ const defaults = (): Settings => ({
   presets: [
     {
       id: 'gym', seed: true, name: { es: 'GIMNASIO', en: 'GYM' },
-      vals: { look: 'minimal', hero: 'side', oneHand: false, tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: false, awake: true },
+      vals: { layout: { id: 'simple', custom: defaultCustom() }, hero: 'side', tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: false, awake: true },
     },
     {
       id: 'box', seed: true, name: { es: 'BOX', en: 'BOX' },
-      vals: { look: 'minimal', hero: 'target', oneHand: true, tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: true, awake: true },
+      vals: { layout: { id: 'onehand', custom: defaultCustom() }, hero: 'target', tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: true, awake: true },
     },
   ],
   presetId: null,
@@ -158,6 +162,8 @@ function load(): Settings {
         merged.look = 'minimal'
         merged.schema = 2
       }
+      // Layouts are new: keep what the screen looked like until now.
+      if (!saved.layout) merged.layout = fromLegacy(merged.look, merged.oneHand)
       // Someone who already finished the old guide does not get the checklist.
       if (!saved.steps && saved.guideDone) merged.steps.hidden = true
       return merged

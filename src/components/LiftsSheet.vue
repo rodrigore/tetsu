@@ -11,8 +11,13 @@ const ui = useUi()
 const t = computed(() => messages(app.s.lang))
 const empty = computed(() => app.s.lifts.every((l) => l.example))
 function enter() {
-  ui.open.lifts = false
-  setTimeout(() => (document.getElementById('pr-input') as HTMLInputElement | null)?.focus(), 50)
+  // The PR field of the main screen when it is shown; otherwise stay here and edit it in the list below.
+  if (document.getElementById('pr-input')) {
+    ui.open.lifts = false
+    setTimeout(() => document.getElementById('pr-input')?.focus(), 50)
+  } else {
+    document.querySelector<HTMLInputElement>('.editor input')?.focus()
+  }
 }
 </script>
 

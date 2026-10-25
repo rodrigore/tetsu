@@ -11,7 +11,7 @@ export interface Profile {
   /** Pairs per plate id; any catalog plate not listed is set to 0. */
   pairs: Record<string, number>
   /** Display choices that go with this place. */
-  vals: Partial<Pick<Settings, 'hero' | 'oneHand'>>
+  vals: Partial<Pick<Settings, 'hero'>> & { layout?: 'onehand' }
 }
 
 export const PROFILES: Profile[] = [
@@ -20,28 +20,28 @@ export const PROFILES: Profile[] = [
     bars: [{ value: 45, unit: 'lb' }, { value: 35, unit: 'lb' }],
     unit: 'lb',
     pairs: { '45lb': 2, '35lb': 1, '25lb': 1, '10lb': 2, '5lb': 1 },
-    vals: { hero: 'side', oneHand: false },
+    vals: { hero: 'side' },
   },
   {
     id: 'box',
     bars: [{ value: 20, unit: 'kg' }, { value: 15, unit: 'kg' }],
     unit: 'kg',
     pairs: { '25kg': 2, '20kg': 2, '15kg': 2, '10kg': 2, '5kg': 2, '2.5kg': 2, '2kg': 1, '1kg': 1, '0.5kg': 1, '0.25kg': 1 },
-    vals: { hero: 'target', oneHand: true },
+    vals: { hero: 'target', layout: 'onehand' },
   },
   {
     id: 'kilos',
     bars: [{ value: 20, unit: 'kg' }],
     unit: 'kg',
     pairs: { '25kg': 2, '20kg': 2, '15kg': 2, '10kg': 2, '5kg': 2, '2.5kg': 2, '1kg': 1, '0.5kg': 1 },
-    vals: { hero: 'side', oneHand: false },
+    vals: { hero: 'side' },
   },
   {
     id: 'home',
     bars: [{ value: 20, unit: 'kg' }],
     unit: 'kg',
     pairs: { '20kg': 1, '10kg': 2, '5kg': 2, '2.5kg': 2, '1kg': 1, '0.5kg': 1 },
-    vals: { hero: 'side', oneHand: false },
+    vals: { hero: 'side' },
   },
 ]
 
@@ -64,7 +64,7 @@ export interface ProfileUndo {
   inventory: Record<string, number>
   unit: Unit
   hero: Settings['hero']
-  oneHand: boolean
+  layout: Settings['layout']
 }
 
 export function snapshot(s: Settings): ProfileUndo {
@@ -74,7 +74,7 @@ export function snapshot(s: Settings): ProfileUndo {
     inventory: { ...s.inventory },
     unit: s.unit,
     hero: s.hero,
-    oneHand: s.oneHand,
+    layout: JSON.parse(JSON.stringify(s.layout)),
   }
 }
 
@@ -84,7 +84,7 @@ export function restore(s: Settings, u: ProfileUndo): void {
   s.inventory = u.inventory
   s.unit = u.unit
   s.hero = u.hero
-  s.oneHand = u.oneHand
+  s.layout = u.layout
 }
 
 /** Custom plates the user added are kept; everything else is replaced by the profile. */
@@ -95,7 +95,7 @@ export function applyProfile(s: Settings, id: ProfileId): void {
   s.inventory = { ...profileInventory(p), ...Object.fromEntries(Object.entries(s.inventory).filter(([k]) => k.startsWith('c:'))) }
   s.unit = p.unit
   if (p.vals.hero) s.hero = p.vals.hero
-  if (p.vals.oneHand !== undefined) s.oneHand = p.vals.oneHand
+  if (p.vals.layout) s.layout.id = p.vals.layout
 }
 
 /** The profile whose bars, unit and plates match the current settings, if any. */

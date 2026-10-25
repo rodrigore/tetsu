@@ -5,7 +5,7 @@ import type { RoundMode } from '../core/solver'
 
 /** Which full-screen sheets are open. Not persisted. */
 export const useUi = defineStore('ui', () => {
-  const open = reactive({ settings: false, inventory: false, lifts: false, warmup: false, share: false, pr: false, manual: false, plan: false, guide: 0, onboarding: false })
+  const open = reactive({ settings: false, inventory: false, lifts: false, warmup: false, share: false, pr: false, manual: false, plan: false, guide: 0, onboarding: false, layout: false, layoutEdit: false })
   const tab = reactive({ settings: 'display' as 'display' | 'bar' | 'general' })
   /** Rounding picked on the main screen for the current target. Not saved; resets when the target changes. */
   /** Advanced block in settings, folded by default. */
