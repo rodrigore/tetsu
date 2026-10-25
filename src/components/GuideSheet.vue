@@ -156,7 +156,7 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
       </template>
 
       <div class="nav">
-        <button type="button" class="back" @click="ui.open.guide = Math.max(1, step - 1)">{{ t.back }}</button>
+        <button v-if="step > 1" type="button" class="back" @click="ui.open.guide = step - 1">{{ t.back }}</button>
         <button type="button" class="next" @click="next">{{ step >= STEPS ? t.finish : t.next }}</button>
       </div>
     </div>
