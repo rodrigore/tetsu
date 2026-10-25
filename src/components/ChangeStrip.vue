@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useApp } from '../stores/app'
 import { useUi } from '../stores/ui'
 import { diffPlates } from '../core/delta'
@@ -19,7 +19,7 @@ const t = computed(() => messages(app.s.lang))
 const ids = computed(() => props.used.map((p) => p.def.id))
 const diff = computed(() => (app.s.onBar ? diffPlates(app.s.onBar, ids.value) : null))
 const same = computed(() => !!diff.value && diff.value.add.length === 0 && diff.value.remove.length === 0)
-const mark = () => (app.s.onBar = [...ids.value])
+const more = ref(false)
 const text = (c: { id: string; count: number }) => {
   const i = props.info(c.id)
   return `${c.count > 1 ? c.count + '×' : ''}${i.label} ${i.unit}`
@@ -37,16 +37,16 @@ const text = (c: { id: string; count: number }) => {
       </template>
       <button type="button" class="x" :aria-label="t.clearLoaded" @click="app.s.onBar = null">×</button>
     </div>
-    <div class="btns">
-      <button type="button" :disabled="same" @click="mark">{{ t.markLoaded }}</button>
-      <button type="button" @click="ui.open.warmup = true">{{ t.warmup }}</button>
+    <button type="button" class="more" :aria-expanded="more" @click="more = !more">
+      {{ more ? t.lessTools : t.moreTools }}
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path :d="more ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'" /></svg>
+    </button>
+    <div v-if="more" class="btns">
+      <button type="button" @click="ui.open.warmup = true; app.s.steps.warm = true">{{ t.warmup }}</button>
+      <button type="button" @click="ui.open.manual = true">{{ t.manualBtn }}</button>
       <button type="button" class="ico" :aria-label="t.share" @click="$emit('share')">
         <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3" /><path d="M8.5 6.5L12 3l3.5 3.5" /><path d="M7 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-1" /></svg>
       </button>
-    </div>
-    <div class="btns">
-      <button type="button" @click="ui.open.plan = true">{{ t.trainBtn }}</button>
-      <button type="button" @click="ui.open.manual = true">{{ t.manualBtn }}</button>
     </div>
   </div>
 </template>
@@ -104,6 +104,20 @@ const text = (c: { id: string; count: number }) => {
   background: transparent;
   color: var(--muted);
   font-size: 18px;
+}
+.more {
+  align-self: flex-start;
+  height: 44px;
+  padding: 0 6px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: calc(14px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.12em;
 }
 .btns {
   display: flex;
