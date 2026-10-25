@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyProfile, PROFILES, profileInventory, profileOf, restore, snapshot } from './profiles'
+import { applyProfile, currentProfile, PROFILES, profileInventory, profileOf, restore, snapshot } from './profiles'
 import { CATALOG, plateId } from './catalog'
 import { createPinia, setActivePinia } from 'pinia'
 import { useApp } from '../stores/app'
@@ -38,5 +38,14 @@ describe('profiles', () => {
     expect(app.s.bars).toEqual(before.bars)
     expect(app.s.inventory).toEqual(before.inventory)
     expect(app.s.unit).toBe(before.unit)
+  })
+
+  it('tells which profile is active until the plates are edited', () => {
+    setActivePinia(createPinia())
+    const app = useApp()
+    applyProfile(app.s, 'box')
+    expect(currentProfile(app.s)).toBe('box')
+    app.s.inventory['25kg'] = 5
+    expect(currentProfile(app.s)).toBeNull()
   })
 })
