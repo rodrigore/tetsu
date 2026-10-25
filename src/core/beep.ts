@@ -1,18 +1,9 @@
-export interface Tone {
-  /** Hz. */
-  freq: number
-  /** Seconds after the start. */
-  at: number
-  /** Seconds. */
-  dur: number
-}
+import { soundOf, type Tone } from './sounds'
 
-/** "bip bip BIIP": two short tones and a longer, higher one. */
-export const BEEP_PATTERN: Tone[] = [
-  { freq: 880, at: 0, dur: 0.12 },
-  { freq: 880, at: 0.22, dur: 0.12 },
-  { freq: 1320, at: 0.44, dur: 0.35 },
-]
+export type { Tone }
+
+/** "bip bip BIIP": the default sound. */
+export const BEEP_PATTERN: Tone[] = soundOf('tres').tones
 
 export const VIBRATION: number[] = [120, 80, 120, 80, 320]
 
@@ -93,8 +84,8 @@ export function unlockAudio(): void {
   if (c && c.state !== 'running') void c.resume().catch(() => undefined)
 }
 
-/** Plays the three tones and vibrates where the phone allows it. Never throws. */
-export function alertDone(): void {
+/** Plays the chosen sound and vibrates where the phone allows it. Never throws. */
+export function alertDone(soundId?: string): void {
   try {
     navigator.vibrate?.(VIBRATION)
   } catch {
@@ -104,7 +95,7 @@ export function alertDone(): void {
   if (!c) return
   const play = () => {
     try {
-      schedule(c)
+      schedule(c, soundOf(soundId).tones)
     } catch {
       /* audio blocked */
     }
@@ -114,29 +105,27 @@ export function alertDone(): void {
   else play()
 }
 
-function schedule(c: AudioContext): void {
-  {
-    const t0 = c.currentTime + 0.02
-    for (const tone of BEEP_PATTERN) {
-      const osc = c.createOscillator()
-      const gain = c.createGain()
-      osc.type = 'sine'
-      osc.frequency.value = tone.freq
-      const s = t0 + tone.at
-      gain.gain.setValueAtTime(0.0001, s)
-      gain.gain.exponentialRampToValueAtTime(0.35, s + 0.01)
-      gain.gain.exponentialRampToValueAtTime(0.0001, s + tone.dur)
-      osc.connect(gain).connect(c.destination)
-      osc.start(s)
-      osc.stop(s + tone.dur + 0.02)
-    }
+function schedule(c: AudioContext, tones: Tone[]): void {
+  const t0 = c.currentTime + 0.02
+  for (const tone of tones) {
+    const osc = c.createOscillator()
+    const gain = c.createGain()
+    osc.type = tone.type ?? 'sine'
+    osc.frequency.value = tone.freq
+    const s = t0 + tone.at
+    gain.gain.setValueAtTime(0.0001, s)
+    gain.gain.exponentialRampToValueAtTime(tone.gain ?? 0.35, s + 0.01)
+    gain.gain.exponentialRampToValueAtTime(0.0001, s + tone.dur)
+    osc.connect(gain).connect(c.destination)
+    osc.start(s)
+    osc.stop(s + tone.dur + 0.02)
   }
 }
 
-/** The "test sound" button: a tap, so it also unlocks the audio. */
-export function testSound(): void {
+/** Previews a sound from a tap, so it also unlocks the audio. */
+export function testSound(soundId?: string): void {
   unlockAudio()
   startAudioSession()
-  alertDone()
-  setTimeout(stopAudioSession, 1800)
+  alertDone(soundId)
+  setTimeout(stopAudioSession, 3000)
 }

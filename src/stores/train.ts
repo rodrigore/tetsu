@@ -31,7 +31,7 @@ export const useTrain = defineStore('train', () => {
     now.value = Date.now()
     if (phase.value === 'rest' && !restDone.value && remainingSec(restEnd.value, now.value) === 0) {
       restDone.value = true
-      if (app.s.plan.sound) alertDone()
+      if (app.s.plan.sound) alertDone(app.s.plan.tone)
     }
   }
   watch(phase, (p) => {

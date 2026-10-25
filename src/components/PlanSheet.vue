@@ -6,11 +6,11 @@ import { useTrain } from '../stores/train'
 import { fmt } from '../core/format'
 import { messages } from '../core/i18n'
 import { activeTemplate, clampPct, clampReps, MAX_SETS, nextSet, PLAN_TEMPLATES, planSteps } from '../core/plan'
-import { testSound } from '../core/beep'
 import { useLoad } from '../core/useLoad'
 import { fromKg, parseNumber } from '../core/units'
 import { selectAll } from '../core/selectAll'
-import RestInput from './RestInput.vue'
+import RestField from './RestField.vue'
+import SoundField from './SoundField.vue'
 import Sheet from './Sheet.vue'
 
 const app = useApp()
@@ -84,7 +84,7 @@ const remove = (i: number) => app.s.plan.sets.splice(i, 1)
 
     <div class="rest">
       <div class="lbl">{{ t.trRest }}<small>{{ t.trRestHint }}</small></div>
-      <RestInput v-model="app.s.plan.rest" />
+      <RestField v-model="app.s.plan.rest" />
     </div>
     <div class="tg">
       <span>{{ t.trAuto }}</span>
@@ -94,11 +94,7 @@ const remove = (i: number) => app.s.plan.sets.splice(i, 1)
       <span>{{ t.trSound }}</span>
       <button type="button" role="switch" :aria-checked="app.s.plan.sound" :aria-label="t.trSound" :class="{ on: app.s.plan.sound }" @click="app.s.plan.sound = !app.s.plan.sound"><i /></button>
     </div>
-
-<div class="snd">
-      <button type="button" class="test" @click="testSound()">{{ t.trTestSound }}</button>
-      <p>{{ t.trSilentHint }}</p>
-    </div>
+    <SoundField />
 
     <button type="button" class="go" :disabled="!sets.length" @click="train.begin()">{{ t.trStart }}</button>
   </Sheet>
@@ -130,9 +126,6 @@ li:last-child { border-bottom: 1px solid var(--line); }
 .rest { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
 .lbl { font-size: calc(19px * var(--ts)); font-weight: 600; letter-spacing: 0.04em; line-height: 1.15; }
 .lbl small { display: block; font-size: calc(14px * var(--ts)); font-weight: 500; color: var(--muted); letter-spacing: 0.02em; }
-.snd { display: flex; flex-direction: column; gap: 8px; }
-.snd p { margin: 0; font-size: calc(14px * var(--ts)); color: var(--muted); letter-spacing: 0.02em; line-height: 1.3; }
-.test { align-self: flex-start; height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-size: calc(16px * var(--ts)); font-weight: 700; letter-spacing: 0.08em; }
 .tg { display: flex; align-items: center; justify-content: space-between; min-height: 48px; font-size: calc(18px * var(--ts)); font-weight: 600; letter-spacing: 0.04em; }
 .tg button { flex: none; width: 52px; height: 30px; padding: 0; border-radius: 15px; border: 1px solid var(--line2); background: var(--surface); position: relative; }
 .tg button i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 11px; background: var(--muted); transition: transform 0.15s; }

@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { computed, reactive, watch } from 'vue'
 import type { Lang } from '../core/i18n'
 import type { Formula } from '../core/oneRm'
+import { DEFAULT_SOUND } from '../core/sounds'
 import { PLAN_TEMPLATES, type PlanSet } from '../core/plan'
 import type { RoundMode } from '../core/solver'
 import type { Unit } from '../core/units'
@@ -75,7 +76,7 @@ export interface Settings {
   /** Formula for the PR estimate from reps. */
   e1rm: Formula
   /** Training: the sets (percentage and reps) and how the rest between them behaves. */
-  plan: { sets: PlanSet[]; rest: number; auto: boolean; sound: boolean }
+  plan: { sets: PlanSet[]; rest: number; auto: boolean; sound: boolean; tone: string }
 }
 
 const KEY = 'tetsu:v1'
@@ -133,7 +134,7 @@ const defaults = (): Settings => ({
   installDismissed: false,
   share: defaultShare(),
   e1rm: 'epley',
-  plan: { sets: PLAN_TEMPLATES[0]!.sets.map((x) => ({ ...x })), rest: 120, auto: true, sound: true },
+  plan: { sets: PLAN_TEMPLATES[0]!.sets.map((x) => ({ ...x })), rest: 120, auto: true, sound: true, tone: DEFAULT_SOUND },
 })
 
 function load(): Settings {

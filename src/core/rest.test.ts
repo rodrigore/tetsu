@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BEEP_PATTERN, VIBRATION, alertDone, silentWav, startAudioSession, stopAudioSession, testSound } from './beep'
-import { clampRest, clock, parseRest, remainingSec, ringFraction, splitRest } from './rest'
+import { clampRest, clock, remainingSec, ringFraction, splitRest } from './rest'
 
 describe('rest timer', () => {
   it('counts down from the end time and never goes negative', () => {
@@ -17,29 +17,13 @@ describe('rest timer', () => {
   })
   it('clamps the rest length', () => {
     expect(clampRest(1)).toBe(5)
-    expect(clampRest(99999)).toBe(3600)
+    expect(clampRest(99999)).toBe(3599)
     expect(clampRest(120)).toBe(120)
     expect(clampRest(37)).toBe(37)
   })
   it('splits seconds into minutes and seconds', () => {
     expect(splitRest(150)).toEqual({ m: 2, s: 30 })
     expect(splitRest(45)).toEqual({ m: 0, s: 45 })
-  })
-  it('reads any minutes and seconds typed by hand', () => {
-    expect(parseRest('1', '30')).toBe(90)
-    expect(parseRest('', '45')).toBe(45)
-    expect(parseRest('3', '')).toBe(180)
-    expect(parseRest('0', '90')).toBe(90)
-    expect(parseRest('10', '0')).toBe(600)
-    expect(parseRest('0', '2')).toBe(5)
-    expect(parseRest('90', '0')).toBe(3600)
-  })
-  it('rejects empty, zero or non-numeric input', () => {
-    expect(parseRest('', '')).toBeNull()
-    expect(parseRest('0', '0')).toBeNull()
-    expect(parseRest('a', '5')).toBeNull()
-    expect(parseRest('1', '-5')).toBeNull()
-    expect(parseRest('1.5', '0')).toBeNull()
   })
   it('ring fraction stays within 0..1', () => {
     expect(ringFraction(60, 120)).toBe(0.5)
