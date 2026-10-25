@@ -38,6 +38,7 @@ const text = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.lang
   gap: 8px;
 }
 .gear {
+  display: none;
   flex: none;
   margin-left: auto;
   width: 48px;
@@ -46,9 +47,13 @@ const text = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.lang
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--line);
-  display: flex;
   align-items: center;
   justify-content: center;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .gear {
+    display: flex;
+  }
 }
 .pill {
   display: flex;

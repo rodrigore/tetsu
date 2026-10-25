@@ -55,6 +55,12 @@ const remove = (i: number) => app.s.plan.sets.splice(i, 1)
       <div class="pr"><span class="k">PR</span><div class="lift">{{ fmt(fromKg(app.lift.kg, app.s.unit), app.s.lang) }} <small>{{ U }}</small></div></div>
     </div>
 
+    <section v-if="sets.length === 0" class="empty">
+      <div class="eh">{{ t.emPlanT }}</div>
+      <p>{{ t.emPlanD }}</p>
+      <button type="button" @click="pickTemplate(PLAN_TEMPLATES[0]!.id)">{{ t.emPlanBtn }}</button>
+    </section>
+
     <div>
       <span class="k">{{ t.trTemplate }}</span>
       <div class="chips hide-scroll">
@@ -133,4 +139,35 @@ li:last-child { border-bottom: 1px solid var(--line); }
 .tg button.on i { background: var(--on); transform: translateX(22px); }
 .go { height: 56px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on); font-size: calc(19px * var(--ts)); font-weight: 700; letter-spacing: 0.08em; }
 .go:disabled { opacity: 0.4; }
+.empty {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+  background: var(--surface);
+}
+.eh {
+  font-size: calc(23px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+.empty p {
+  margin: 4px 0 0;
+  font-size: calc(17px * var(--ts));
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.3;
+}
+.empty button {
+  margin-top: 12px;
+  height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on);
+  font-size: calc(16px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
 </style>
