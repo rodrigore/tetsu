@@ -10,8 +10,10 @@ export const useUi = defineStore('ui', () => {
   /** Rounding picked on the main screen for the current target. Not saved; resets when the target changes. */
   /** Advanced block in settings, folded by default. */
   const advanced = ref(false)
+  /** First-steps card shows every step, not just the next one. */
+  const stepsOpen = ref(false)
   const roundPick = ref<RoundMode | null>(null)
   /** When set, the share sheet shows the new-PR card for this record. */
   const prCard = ref<PrInfo | null>(null)
-  return { open, tab, advanced, roundPick, prCard }
+  return { open, tab, advanced, stepsOpen, roundPick, prCard }
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useApp } from '../stores/app'
 import { useUi } from '../stores/ui'
 import { useToast } from '../stores/toast'
@@ -36,7 +36,7 @@ const steps = computed<Step[]>(() => [
   },
 ])
 const count = computed(() => steps.value.filter((s) => s.done).length)
-const open = ref(false)
+const open = computed({ get: () => ui.stepsOpen, set: (v) => (ui.stepsOpen = v) })
 // Collapsed, only the next pending step shows so the result stays in view.
 const shown = computed(() => (open.value ? steps.value : steps.value.filter((s) => !s.done).slice(0, 1)))
 const visible = computed(() => app.s.guideDone && !app.s.steps.hidden)
