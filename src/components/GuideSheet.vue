@@ -4,6 +4,8 @@ import { useApp, type Preset } from '../stores/app'
 import { useUi } from '../stores/ui'
 import { messages } from '../core/i18n'
 import { fmtW } from '../core/format'
+import { PLAN_TEMPLATES, activeTemplate } from '../core/plan'
+import { clampRest, clock, REST_STEP } from '../core/rest'
 import LayoutPreview from './LayoutPreview.vue'
 import LiftsEditor from './LiftsEditor.vue'
 import PercentList from './PercentList.vue'
@@ -14,9 +16,19 @@ const app = useApp()
 const ui = useUi()
 const t = computed(() => messages(app.s.lang))
 const step = computed(() => ui.open.guide)
-const STEPS = 6
-const titles = computed(() => [t.value.g1, t.value.gv, t.value.g2, t.value.g3, t.value.gw, t.value.g4])
-const hints = computed(() => [t.value.g1h, t.value.gvh, t.value.g2h, t.value.g3h, t.value.gwh, t.value.g4h])
+const STEPS = 8
+const titles = computed(() => [t.value.g1, t.value.gv, t.value.g2, t.value.g3, t.value.gw, t.value.gt, t.value.gx, t.value.g4])
+const hints = computed(() => [t.value.g1h, t.value.gvh, t.value.g2h, t.value.g3h, t.value.gwh, t.value.gth, t.value.gxh, t.value.g4h])
+const tour = computed(() => [1, 2, 3, 4, 5, 6, 7].map((n) => ({
+  title: t.value[`tour${n}t` as keyof typeof t.value],
+  body: t.value[`tour${n}b` as keyof typeof t.value],
+})))
+const activePlan = computed(() => activeTemplate(app.s.plan.sets))
+const pickPlan = (id: string) => {
+  app.s.plan.sets = PLAN_TEMPLATES.find((x) => x.id === id)!.sets.map((x) => ({ ...x }))
+}
+const rest = (d: number) => (app.s.plan.rest = clampRest(app.s.plan.rest + d))
+const yesNo = computed(() => [{ value: true, label: t.value.yes }, { value: false, label: t.value.no }])
 
 const presetLabel = (p: Preset) => (typeof p.name === 'string' ? p.name : p.name[app.s.lang])
 function applyPreset(p: Preset) {
@@ -107,6 +119,36 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
         </Section>
       </template>
 
+      <template v-else-if="step === 6">
+        <Section :title="t.gtTemplate">
+          <div class="presets">
+            <button v-for="tp in PLAN_TEMPLATES" :key="tp.id" type="button" :class="{ on: activePlan === tp.id }" :aria-pressed="activePlan === tp.id" @click="pickPlan(tp.id)">{{ tp.name[app.s.lang] }}</button>
+          </div>
+        </Section>
+        <Section :title="t.gtRest">
+          <div class="stepper">
+            <button type="button" :aria-label="t.trRestLess" @click="rest(-REST_STEP)">−</button>
+            <output class="display">{{ clock(app.s.plan.rest) }}</output>
+            <button type="button" :aria-label="t.trRestMore" @click="rest(REST_STEP)">+</button>
+          </div>
+        </Section>
+        <Section :title="t.trAuto">
+          <Seg v-model="app.s.plan.auto" :options="yesNo" />
+        </Section>
+        <Section :title="t.trSound">
+          <Seg v-model="app.s.plan.sound" :options="yesNo" />
+        </Section>
+        <Section :title="t.prFormula" :hint="t.gtFormulaHint">
+          <Seg v-model="app.s.e1rm" :options="[{ value: 'epley', label: 'EPLEY' }, { value: 'brzycki', label: 'BRZYCKI' }]" />
+        </Section>
+      </template>
+
+      <template v-else-if="step === 7">
+        <ul class="tour">
+          <li v-for="(it, i) in tour" :key="i"><b>{{ it.title }}</b><span>{{ it.body }}</span></li>
+        </ul>
+      </template>
+
       <template v-else>
         <button type="button" class="wide" @click="openInventory">{{ t.guideInvBtn }}</button>
       </template>
@@ -191,6 +233,54 @@ p {
   background: var(--accent);
   color: var(--on);
   border-color: var(--accent);
+}
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.stepper button {
+  width: 52px;
+  height: 48px;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line2);
+  font-size: 26px;
+}
+.stepper output {
+  min-width: 80px;
+  text-align: center;
+  font-size: 34px;
+}
+.tour {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.tour li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.tour li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.tour b {
+  font-size: calc(18px * var(--ts));
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+.tour span {
+  font-size: calc(16px * var(--ts));
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  line-height: 1.3;
 }
 .wide {
   width: 100%;
