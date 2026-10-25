@@ -6,7 +6,7 @@ import { messages } from '../core/i18n'
 import { allPlates, defaultPairs } from '../core/catalog'
 import { fmtW } from '../core/format'
 import { toKg, type Unit } from '../core/units'
-import { applyProfile, PROFILES, restore, snapshot, type ProfileId } from '../core/profiles'
+import { applyProfile, currentProfile, PROFILES, restore, snapshot, type ProfileId } from '../core/profiles'
 import { plateLook } from '../core/plateView'
 import Sheet from './Sheet.vue'
 import Section from './Section.vue'
@@ -23,6 +23,7 @@ const bump = (id: string, d: number) => {
   app.s.inventory[id] = Math.max(0, Math.min(20, count(id) + d))
 }
 
+const active = computed(() => currentProfile(app.s))
 const names = computed<Record<ProfileId, string>>(() => ({ gym: t.value.pfGym, box: t.value.pfBox, kilos: t.value.pfKilos, home: t.value.pfHome }))
 function pickProfile(id: ProfileId) {
   const before = snapshot(app.s)
@@ -62,7 +63,7 @@ function removeCustom(id: string) {
     <div>
       <div class="k">{{ t.pfStart }}</div>
       <div class="profiles hide-scroll">
-        <button v-for="p in PROFILES" :key="p.id" type="button" @click="pickProfile(p.id)">{{ names[p.id] }}</button>
+        <button v-for="p in PROFILES" :key="p.id" type="button" :class="{ on: active === p.id }" :aria-pressed="active === p.id" @click="pickProfile(p.id)">{{ names[p.id] }}</button>
       </div>
       <p class="hint">{{ t.pfHint }}</p>
     </div>
@@ -117,6 +118,11 @@ function removeCustom(id: string) {
   font-size: calc(15px * var(--ts));
   font-weight: 700;
   letter-spacing: 0.06em;
+}
+.profiles button.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on);
 }
 .sw {
   flex: none;
