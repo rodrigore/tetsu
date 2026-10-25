@@ -1,5 +1,8 @@
 import { computed } from 'vue'
 import { useApp } from '../stores/app'
+import { useUi } from '../stores/ui'
+import type { Lang } from './i18n'
+import type { PlateLook } from './plateView'
 import { allPlates, defaultPairs } from './catalog'
 import { fmt, fmtW } from './format'
 import { shareText } from './shareText'
@@ -16,9 +19,20 @@ export interface UsedPlate {
   label: string
 }
 
+/** The plates of one side, as the bar view and the chips draw them. */
+export function usedOf(perSide: PlateDef[], lang: Lang): UsedPlate[] {
+  return perSide.map((p) => ({ def: p, value: p.value, unit: p.unit, label: fmtW(p.value, lang) }))
+}
+
+/** How each plate looks on the bar. */
+export function looksOf(used: UsedPlate[], accent: string, olympic: boolean, light: boolean): PlateLook[] {
+  return used.map((p) => plateLook(p.value, p.unit, { accent, olympic: olympic && !p.def.id.startsWith('c:'), light }))
+}
+
 /** Everything the main screen shows, derived from the store. */
 export function useLoad(isLight: () => boolean) {
   const app = useApp()
+  const ui = useUi()
 
   const plates = computed<PlateDef[]>(() => allPlates(app.s.customPlates).map((p) => ({
     id: p.id,
@@ -30,13 +44,16 @@ export function useLoad(isLight: () => boolean) {
   const targetKg = computed(() => (app.lift.kg * app.s.pct) / 100)
   const barKg = computed(() => toKg(app.bar.value, app.bar.unit))
 
+  /** The rounding in use: the one picked for this target, or the setting. */
+  const mode = computed(() => ui.roundPick ?? app.s.round)
+
   const result = computed(() =>
     solve({
       targetKg: targetKg.value,
       barKg: barKg.value,
       collarKg: app.s.collarKg,
       plates: plates.value,
-      mode: app.s.round,
+      mode: mode.value,
     }),
   )
 
@@ -44,20 +61,10 @@ export function useLoad(isLight: () => boolean) {
   const f = (v: number) => fmt(v, app.s.lang)
   const U = computed(() => app.s.unit.toUpperCase())
 
-  const used = computed<UsedPlate[]>(() =>
-    result.value.perSide.map((p) => ({
-      def: p,
-      value: p.value,
-      unit: p.unit,
-      label: fmtW(p.value, app.s.lang),
-    })),
-  )
+  const used = computed<UsedPlate[]>(() => usedOf(result.value.perSide, app.s.lang))
 
-  const looks = computed(() =>
-    used.value.map((p) =>
-      plateLook(p.value, p.unit, { accent: paletteOf(app.s.accent)[isLight() ? 'accentLight' : 'accent'], olympic: app.s.olympic && !p.def.id.startsWith('c:'), light: isLight() }),
-    ),
-  )
+  const accent = computed(() => paletteOf(app.s.accent)[isLight() ? 'accentLight' : 'accent'])
+  const looks = computed(() => looksOf(used.value, accent.value, app.s.olympic, isLight()))
 
   const chips = computed(() => {
     const groups: { id: string; label: string; unit: string; count: number }[] = []
@@ -124,5 +131,5 @@ export function useLoad(isLight: () => boolean) {
       sideKg: result.value.loadedSideKg,
     })
 
-  return { t, f, U, result, used, looks, chips, hero, targetKg, diffText, exact, notice, plates, barKg, plateInfo, shareMessage }
+  return { t, f, U, result, used, looks, chips, hero, targetKg, diffText, exact, notice, plates, barKg, plateInfo, shareMessage, mode, accent }
 }
