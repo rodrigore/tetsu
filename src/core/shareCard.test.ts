@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { allPlates, defaultPairs } from './catalog'
 import {
   buildCardData, cardFileName, cardSize, colorway, defaultShare, formatDate, formatOf, renderCard, templatesFor,
-  TEMPLATES, type BuildInput, type CardTemplate,
+  TEMPLATES, type BuildInput, type CardData, type CardTemplate,
 } from './shareCard'
 
 const plates = allPlates([]).map((p) => ({ id: p.id, value: p.value, unit: p.unit, pairs: defaultPairs(p.id) }))
@@ -104,10 +104,11 @@ describe('renderCard', () => {
 
   it.each(TEMPLATES.map((t) => t.id))('draws the "%s" template', (template: CardTemplate) => {
     const { canvas, texts } = fakeCanvas()
-    renderCard(canvas, c, { ...defaultShare(), template, accent: '#FF5A1F' }, 2)
+    const data = template === 'nuevopr' ? { ...c, pr: { newKg: 151.7, prevKg: 140, source: { kg: 130, reps: 5 } } } : c
+    renderCard(canvas, data, { ...defaultShare(), template, accent: '#FF5A1F' }, 2)
     const { w, h } = cardSize(formatOf(template))
     expect({ w: canvas.width, h: canvas.height }).toEqual({ w: w * 2, h: h * 2 })
-    expect(texts.join('')).toContain('119')
+    expect(texts.join('')).toContain(template === 'nuevopr' ? '151,7' : '119')
   })
 
   it('does not draw plates when they are switched off', () => {
@@ -138,4 +139,57 @@ describe('renderCard', () => {
       expect(off.texts.join('')).not.toContain('rodrigore')
     },
   )
+})
+
+describe('new-PR card', () => {
+  const base = buildCardData(input())
+  const draw = (pr: CardData['pr'], over: Partial<CardData> = {}) => {
+    const { canvas, texts } = fakeCanvas()
+    renderCard(canvas, { ...base, ...over, pr }, { ...defaultShare(), template: 'nuevopr', accent: '#FF5A1F' }, 1)
+    return texts.join('')
+  }
+
+  it('is a story card that the regular carousel does not offer', () => {
+    expect(formatOf('nuevopr')).toBe('story')
+    expect(templatesFor('story').map((t) => t.id)).not.toContain('nuevopr')
+  })
+
+  it('shows the badge, the new record, the gain and where it came from', () => {
+    const out = draw({ newKg: 151.7, prevKg: 140, source: { kg: 130, reps: 5 } })
+    expect(out).toContain('NUEVO PR')
+    expect(out).toContain('151,7')
+    expect(out).toContain('+11,7')
+    expect(out).toContain('ANTES')
+    expect(out).toContain('130')
+    expect(out).toContain('5 REPS')
+  })
+
+  it('speaks English', () => {
+    const out = draw({ newKg: 151.7, prevKg: 140, source: { kg: 130, reps: 5 } }, { lang: 'en' })
+    expect(out).toContain('NEW PR')
+    expect(out).toContain('151.7')
+    expect(out).toContain('BEFORE')
+    expect(out).toContain('Estimated from')
+  })
+
+  it('has no comparison or gain on a first record or when it did not improve', () => {
+    const first = draw({ newKg: 100, prevKg: null, source: null })
+    expect(first).toContain('100')
+    expect(first).not.toContain('ANTES')
+    expect(first).not.toContain('+')
+    const worse = draw({ newKg: 130, prevKg: 140, source: null })
+    expect(worse).not.toContain('+')
+  })
+
+  it('converts to pounds', () => {
+    const out = draw({ newKg: 100, prevKg: 90, source: null }, { unit: 'lb' })
+    expect(out).toContain('220,5')
+    expect(out).toContain('LB')
+  })
+
+  it('passes the record through buildCardData', () => {
+    const pr = { newKg: 151.7, prevKg: 140, source: { kg: 130, reps: 5 } }
+    expect(buildCardData(input({ pr })).pr).toEqual(pr)
+    expect(buildCardData(input()).pr).toBeUndefined()
+  })
 })

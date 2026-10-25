@@ -44,6 +44,10 @@ const text = (c: { id: string; count: number }) => {
         <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3" /><path d="M8.5 6.5L12 3l3.5 3.5" /><path d="M7 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-1" /></svg>
       </button>
     </div>
+    <div class="btns">
+      <button type="button" @click="ui.open.plan = true">{{ t.trainBtn }}</button>
+      <button type="button" @click="ui.open.manual = true">{{ t.manualBtn }}</button>
+    </div>
   </div>
 </template>
 
