@@ -5,7 +5,8 @@ import { useUi } from '../stores/ui'
 import { messages } from '../core/i18n'
 import { fmtW } from '../core/format'
 import { PLAN_TEMPLATES, activeTemplate } from '../core/plan'
-import { clampRest, clock, REST_STEP } from '../core/rest'
+import { testSound } from '../core/beep'
+import RestInput from './RestInput.vue'
 import LayoutPreview from './LayoutPreview.vue'
 import LiftsEditor from './LiftsEditor.vue'
 import PercentList from './PercentList.vue'
@@ -27,9 +28,12 @@ const activePlan = computed(() => activeTemplate(app.s.plan.sets))
 const pickPlan = (id: string) => {
   app.s.plan.sets = PLAN_TEMPLATES.find((x) => x.id === id)!.sets.map((x) => ({ ...x }))
 }
-const rest = (d: number) => (app.s.plan.rest = clampRest(app.s.plan.rest + d))
 const yesNo = computed(() => [{ value: true, label: t.value.yes }, { value: false, label: t.value.no }])
 
+const presetDesc = computed(() => {
+  const id = app.s.presetId
+  return id === 'gym' ? t.value.presetGymDesc : id === 'box' ? t.value.presetBoxDesc : ''
+})
 const presetLabel = (p: Preset) => (typeof p.name === 'string' ? p.name : p.name[app.s.lang])
 function applyPreset(p: Preset) {
   Object.assign(app.s, p.vals)
@@ -74,7 +78,7 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
 
       <template v-else-if="step === 2">
         <LayoutPreview />
-        <Section :title="t.presets">
+        <Section :title="t.presets" :hint="t.guidePresetsHint">
           <div class="presets">
             <button
               v-for="p in app.s.presets"
@@ -85,6 +89,7 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
               @click="applyPreset(p)"
             >{{ presetLabel(p) }}</button>
           </div>
+          <div v-if="presetDesc" class="pdesc">{{ presetDesc }}</div>
         </Section>
         <Section :title="t.oneHandTitle">
           <Seg v-model="app.s.oneHand" :options="[{ value: false, label: t.no }, { value: true, label: t.yes }]" />
@@ -126,17 +131,15 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
           </div>
         </Section>
         <Section :title="t.gtRest">
-          <div class="stepper">
-            <button type="button" :aria-label="t.trRestLess" @click="rest(-REST_STEP)">−</button>
-            <output class="display">{{ clock(app.s.plan.rest) }}</output>
-            <button type="button" :aria-label="t.trRestMore" @click="rest(REST_STEP)">+</button>
-          </div>
+          <RestInput v-model="app.s.plan.rest" />
         </Section>
         <Section :title="t.trAuto">
           <Seg v-model="app.s.plan.auto" :options="yesNo" />
         </Section>
         <Section :title="t.trSound">
           <Seg v-model="app.s.plan.sound" :options="yesNo" />
+          <button type="button" class="test" @click="testSound()">{{ t.trTestSound }}</button>
+          <div class="h">{{ t.trSilentHint }}</div>
         </Section>
         <Section :title="t.prFormula" :hint="t.gtFormulaHint">
           <Seg v-model="app.s.e1rm" :options="[{ value: 'epley', label: 'EPLEY' }, { value: 'brzycki', label: 'BRZYCKI' }]" />
@@ -229,10 +232,37 @@ p {
   font-weight: 700;
   letter-spacing: 0.1em;
 }
+.pdesc {
+  padding: 10px 12px;
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  font-size: calc(16px * var(--ts));
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+}
 .presets button.on {
   background: var(--accent);
   color: var(--on);
   border-color: var(--accent);
+}
+.test {
+  align-self: flex-start;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 22px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-size: calc(16px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.h {
+  font-size: calc(14px * var(--ts));
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  line-height: 1.3;
 }
 .stepper {
   display: flex;

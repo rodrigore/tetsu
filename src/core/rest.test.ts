@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { BEEP_PATTERN, VIBRATION, alertDone } from './beep'
-import { clampRest, clock, remainingSec, ringFraction } from './rest'
+import { BEEP_PATTERN, VIBRATION, alertDone, silentWav, startAudioSession, stopAudioSession, testSound } from './beep'
+import { clampRest, clock, parseRest, remainingSec, ringFraction, splitRest } from './rest'
 
 describe('rest timer', () => {
   it('counts down from the end time and never goes negative', () => {
@@ -16,9 +16,30 @@ describe('rest timer', () => {
     expect(clock(-3)).toBe('0:00')
   })
   it('clamps the rest length', () => {
-    expect(clampRest(5)).toBe(15)
-    expect(clampRest(9999)).toBe(600)
+    expect(clampRest(1)).toBe(5)
+    expect(clampRest(99999)).toBe(3600)
     expect(clampRest(120)).toBe(120)
+    expect(clampRest(37)).toBe(37)
+  })
+  it('splits seconds into minutes and seconds', () => {
+    expect(splitRest(150)).toEqual({ m: 2, s: 30 })
+    expect(splitRest(45)).toEqual({ m: 0, s: 45 })
+  })
+  it('reads any minutes and seconds typed by hand', () => {
+    expect(parseRest('1', '30')).toBe(90)
+    expect(parseRest('', '45')).toBe(45)
+    expect(parseRest('3', '')).toBe(180)
+    expect(parseRest('0', '90')).toBe(90)
+    expect(parseRest('10', '0')).toBe(600)
+    expect(parseRest('0', '2')).toBe(5)
+    expect(parseRest('90', '0')).toBe(3600)
+  })
+  it('rejects empty, zero or non-numeric input', () => {
+    expect(parseRest('', '')).toBeNull()
+    expect(parseRest('0', '0')).toBeNull()
+    expect(parseRest('a', '5')).toBeNull()
+    expect(parseRest('1', '-5')).toBeNull()
+    expect(parseRest('1.5', '0')).toBeNull()
   })
   it('ring fraction stays within 0..1', () => {
     expect(ringFraction(60, 120)).toBe(0.5)
@@ -36,5 +57,23 @@ describe('alert', () => {
   })
   it('does not throw where there is no audio (node)', () => {
     expect(() => alertDone()).not.toThrow()
+  })
+  it('builds a valid silent WAV', () => {
+    const w = silentWav(1, 8000)
+    const text = (o: number, n: number) => String.fromCharCode(...w.slice(o, o + n))
+    expect(text(0, 4)).toBe('RIFF')
+    expect(text(8, 4)).toBe('WAVE')
+    expect(text(36, 4)).toBe('data')
+    expect(w.length).toBe(44 + 8000)
+    expect(new DataView(w.buffer).getUint32(40, true)).toBe(8000)
+    expect(w.slice(44).every((b) => b === 128)).toBe(true)
+  })
+  it('the audio session and the test button never throw without audio', () => {
+    expect(() => {
+      startAudioSession()
+      testSound()
+      stopAudioSession()
+      stopAudioSession()
+    }).not.toThrow()
   })
 })
