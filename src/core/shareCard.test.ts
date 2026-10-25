@@ -126,4 +126,16 @@ describe('renderCard', () => {
     expect(all).not.toContain('2026')
     expect(all).not.toContain('rodrigore')
   })
+
+  it.each(['numero', 'frase', 'porcentaje', 'discos', 'series', 'linea', 'foto'] as CardTemplate[])(
+    'shows the link on the minimal "%s" template only when asked',
+    (template) => {
+      const on = fakeCanvas()
+      const off = fakeCanvas()
+      renderCard(on.canvas, c, { ...defaultShare(), template, accent: '#FF5A1F', link: true }, 1)
+      renderCard(off.canvas, c, { ...defaultShare(), template, accent: '#FF5A1F', link: false }, 1)
+      expect(on.texts.join('')).toContain('rodrigore.github.io/tetsu')
+      expect(off.texts.join('')).not.toContain('rodrigore')
+    },
+  )
 })

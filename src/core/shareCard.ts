@@ -343,6 +343,11 @@ function footer(e: Env, left: string | null = null): void {
   if (s.link) text(ctx, c.url, W - PAD, y, { size: 14, weight: 600, color: k.muted, align: 'right' })
 }
 
+/** The app address, for the cards that have no footer line. Only when "Link" is on. */
+function linkLine(e: Env, y: number, x = PAD, align: 'left' | 'right' = 'left'): void {
+  if (e.s.link) text(e.ctx, e.c.url, x, y, { size: 14, weight: 600, color: e.k.muted, align })
+}
+
 const sideRuns = (e: Env, big: number, small: number, color = e.k.fg): Run[] => {
   const { c, k } = e
   const units: Unit[] = c.side === 'both' ? [c.unit, otherUnit(c.unit)] : [c.side]
@@ -548,6 +553,7 @@ function tFoto(e: Env): void {
     text(ctx, lab, x, 562, { size: 13, weight: 600, color: k.muted, ls: 0.14 })
     runs(ctx, [{ t: val, size: 30, color: k.fg, gap: 3 }, { t: unit, size: 16, color: k.accent }], x, 596)
   })
+  linkLine(e, 622)
   ctx.restore()
 }
 
@@ -558,6 +564,7 @@ function tNumero(e: Env): void {
   const z = fit(ctx, total, 304, 230)
   text(ctx, total, W / 2, 356, { size: z, color: k.fg, align: 'center' })
   text(ctx, U(c.unit), W / 2, 420, { size: 44, color: k.accent, align: 'center', ls: 0.08 })
+  linkLine(e, H - PAD - 26)
   text(ctx, 'TETSU', PAD, H - PAD, { size: 15, color: k.fg, ls: 0.22 })
   if (e.s.date) text(ctx, c.date, W - PAD, H - PAD, { size: 15, weight: 600, color: k.muted, align: 'right', ls: 0.12 })
 }
@@ -598,6 +605,7 @@ function tFrase(e: Env): void {
     y += lh
     runs(ctx, ln.map((wd) => ({ t: wd.t, size, color: wd.a ? k.accent : k.fg })), PAD, y - size * 0.18)
   }
+  linkLine(e, H - PAD - 28)
   if (e.s.date) text(ctx, c.date, PAD, H - PAD - 2, { size: 14, weight: 600, color: k.muted, ls: 0.12 })
   text(ctx, `PR ${num(c, c.prKg)} ${U(c.unit)}`, W - PAD, H - PAD - 2, { size: 14, weight: 600, color: k.muted, align: 'right', ls: 0.12 })
 }
@@ -611,6 +619,7 @@ function tPorcentaje(e: Env): void {
   text(ctx, '%', PAD + n.w + 6, 360 - n.size * 0.7 + 66, { size: 96, color: k.accent })
   text(ctx, `${L.of} ${num(c, c.prKg)} ${U(c.unit)}`, PAD, 414, { size: 28, color: k.muted, ls: 0.1 })
   runs(ctx, [{ t: '= ', size: 28, color: k.fg }, { t: `${num(c, c.totalKg)} ${U(c.unit)}`, size: 28, color: k.accent }], PAD, 454)
+  linkLine(e, H - PAD - 26)
   text(ctx, 'TETSU', PAD, H - PAD, { size: 15, color: k.fg, ls: 0.22 })
   if (e.s.date) text(ctx, c.date, W - PAD, H - PAD, { size: 15, weight: 600, color: k.muted, align: 'right', ls: 0.12 })
 }
@@ -618,6 +627,7 @@ function tPorcentaje(e: Env): void {
 function tDiscos(e: Env): void {
   const { ctx, c, k, H } = e
   text(ctx, c.liftName, PAD, 46, { size: 16, weight: 600, color: k.muted, ls: 0.2 })
+  linkLine(e, 68)
   const cx = W / 2
   ctx.fillStyle = k.bar
   ctx.fillRect(cx - 4, 80, 8, 470)
@@ -656,6 +666,7 @@ function tSeries(e: Env): void {
     runs(ctx, [{ t: num(c, st.kg), size: 56, color: col, gap: 6 }, { t: U(c.unit), size: 22, color: st.work ? k.accent : k.muted }], W - PAD, y + rh / 2 + 20, 'right')
   })
   hline(ctx, top + sets.length * rh, k.line)
+  linkLine(e, H - PAD - 26)
   text(ctx, 'TETSU', PAD, H - PAD, { size: 15, color: k.fg, ls: 0.22 })
   if (e.s.date) text(ctx, c.date, W - PAD, H - PAD, { size: 15, weight: 600, color: k.muted, align: 'right', ls: 0.12 })
 }
@@ -687,10 +698,14 @@ function tLinea(e: Env): void {
   const { ctx, c, s, k, H } = e
   const L = labels(c.lang)
   text(ctx, 'TETSU', PAD, 46, { size: 16, color: k.fg, ls: 0.22 })
-  ctx.beginPath()
-  ctx.arc(W - PAD - 5, 40, 5, 0, Math.PI * 2)
-  ctx.fillStyle = k.accent
-  ctx.fill()
+  if (s.link) {
+    linkLine(e, 46, W - PAD, 'right')
+  } else {
+    ctx.beginPath()
+    ctx.arc(W - PAD - 5, 40, 5, 0, Math.PI * 2)
+    ctx.fillStyle = k.accent
+    ctx.fill()
+  }
   text(ctx, c.liftName, PAD, 178, { size: 16, weight: 600, color: k.muted, ls: 0.14 })
   const n = bigNumber(e, num(c, c.totalKg), PAD, 262, 104, 220)
   text(ctx, U(c.unit), PAD + n.w + 10, 262, { size: 40, color: k.accent })
