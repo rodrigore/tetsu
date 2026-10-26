@@ -228,7 +228,7 @@ const en = {
 
   guidePresetsHint: 'A profile sets several display options at once, so you only pick one. You can fine-tune everything later in Settings.',
   presetGymDesc: 'GYM: the load per side in big numbers, the bar and plates, the screen stays on. For checking the bar at a glance.',
-  presetBoxDesc: 'BOX: the target weight in big numbers with the difference, one-hand layout, the screen stays on. For fast changes between sets.',
+  presetBoxDesc: 'BOX: the target weight in big numbers with the difference, one-hand layout, the screen stays on, and your plates are set to kilo bumpers with a 20 kg bar. For fast changes between sets.',
 
   trMin: 'Minutes',
   trSec: 'Seconds',
@@ -612,7 +612,7 @@ const es: Dict = {
 
   guidePresetsHint: 'Un perfil cambia varias opciones de pantalla a la vez, así que solo eliges uno. Después puedes ajustar todo en Ajustes.',
   presetGymDesc: 'GIMNASIO: el peso por lado en números grandes, la barra y los discos, y la pantalla siempre encendida. Para mirar la barra de un vistazo.',
-  presetBoxDesc: 'BOX: el peso objetivo en grande con la diferencia, diseño para una mano y pantalla siempre encendida. Para cambios rápidos entre series.',
+  presetBoxDesc: 'BOX: el peso objetivo en grande con la diferencia, diseño para una mano, pantalla siempre encendida y los discos en kilos con barra de 20 kg. Para cambios rápidos entre series.',
 
   trMin: 'Minutos',
   trSec: 'Segundos',

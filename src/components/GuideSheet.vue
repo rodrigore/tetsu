@@ -13,6 +13,7 @@ import PercentList from './PercentList.vue'
 import Section from './Section.vue'
 import Seg from './Seg.vue'
 import AddRow from './AddRow.vue'
+import { applyProfile } from '../core/profiles'
 import { toKg, type Unit } from '../core/units'
 
 const app = useApp()
@@ -38,8 +39,10 @@ const presetDesc = computed(() => {
 })
 const presetLabel = (p: Preset) => (typeof p.name === 'string' ? p.name : p.name[app.s.lang])
 function applyPreset(p: Preset) {
-  Object.assign(app.s, p.vals)
+  Object.assign(app.s, JSON.parse(JSON.stringify(p.vals)))
   app.s.presetId = p.id
+  // BOX also means bumpers in kilos and a 20 kg bar, so the plates match the place.
+  if (p.id === 'box') applyProfile(app.s, 'box')
 }
 
 function close() {
