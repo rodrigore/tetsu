@@ -12,6 +12,8 @@ import LiftsEditor from './LiftsEditor.vue'
 import PercentList from './PercentList.vue'
 import Section from './Section.vue'
 import Seg from './Seg.vue'
+import AddRow from './AddRow.vue'
+import { toKg, type Unit } from '../core/units'
 
 const app = useApp()
 const ui = useUi()
@@ -51,6 +53,13 @@ function next() {
 function openInventory() {
   close()
   ui.open.inventory = true
+}
+function addBar(value: number, unit: Unit) {
+  const kg = toKg(value, unit)
+  if (kg < 2 || kg > 40 || app.s.bars.length >= 4) return false
+  if (app.s.bars.some((b) => b.value === value && b.unit === unit)) return true
+  app.s.bars.push({ value, unit })
+  return true
 }
 const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.lang)} ${b.unit.toUpperCase()}`
 </script>
@@ -106,6 +115,8 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
             v-model="app.s.barIndex"
             :options="app.s.bars.map((b, i) => ({ value: i, label: barText(b) }))"
           />
+          <p class="barhint">{{ t.guideBarHint }}</p>
+          <AddRow :aria="t.addBarAria" :add-label="t.add" :error="t.barErr" :default-unit="app.s.unit" :on-add="addBar" />
         </Section>
         <Section :title="t.collars">
           <Seg
@@ -165,6 +176,14 @@ const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, app.s.l
 </template>
 
 <style scoped>
+.barhint {
+  margin: 0;
+  font-size: calc(16px * var(--ts));
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  line-height: 1.3;
+}
 .guide {
   position: fixed;
   inset: 0;
