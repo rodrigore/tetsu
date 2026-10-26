@@ -106,6 +106,7 @@ function onInput(e: Event) {
   line-height: 1;
 }
 .line {
+  min-width: 0;
   margin-top: 6px;
   display: flex;
   align-items: baseline;
@@ -113,7 +114,9 @@ function onInput(e: Event) {
   line-height: 1;
 }
 .field {
+  flex: 0 1 124px;
   width: 124px;
+  min-width: 48px;
   height: 46px;
   padding: 0;
   background: transparent;
