@@ -15,3 +15,7 @@ Flow:
 5. Hotfixes: branch from `main`, pull request into `main`, then merge `main` back into `dev`.
 
 Dependabot opens its pull requests against `dev`.
+
+## Pruebas de pantalla
+
+`npm run test:e2e` construye la app y la revisa en 10 tamaños de pantalla (iPhone SE a 17 Pro Max, Android, iPad y teléfono acostado), con cada layout, en español e inglés y con texto normal y grande. Falla si algo se sale de la pantalla, si hay controles encimados, si el contenido queda tapado por la barra inferior o si hay errores en consola. Guarda capturas en `e2e/out`. No corre en CI porque necesita el navegador de Playwright.
