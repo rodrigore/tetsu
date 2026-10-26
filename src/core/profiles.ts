@@ -26,7 +26,8 @@ export const PROFILES: Profile[] = [
     id: 'box',
     bars: [{ value: 20, unit: 'kg' }, { value: 15, unit: 'kg' }],
     unit: 'kg',
-    pairs: { '25kg': 2, '20kg': 2, '15kg': 2, '10kg': 2, '5kg': 2, '2.5kg': 2, '2kg': 1, '1kg': 1, '0.5kg': 1, '0.25kg': 1 },
+    // Bumpers in pounds, the small change plates in kilos, bars in kilos.
+    pairs: { '45lb': 4, '35lb': 2, '25lb': 2, '15lb': 2, '10lb': 2, '5lb': 2, '2.5kg': 2, '2kg': 2, '1.5kg': 1, '1kg': 1, '0.5kg': 1 },
     vals: { hero: 'target', layout: 'onehand' },
   },
   {
