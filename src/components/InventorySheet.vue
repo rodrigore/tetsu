@@ -6,6 +6,8 @@ import { messages } from '../core/i18n'
 import { allPlates, defaultPairs } from '../core/catalog'
 import { fmtW } from '../core/format'
 import { toKg, type Unit } from '../core/units'
+import { applyProfile, currentProfile, PROFILES, restore, snapshot, type ProfileId } from '../core/profiles'
+import { plateLook } from '../core/plateView'
 import Sheet from './Sheet.vue'
 import Section from './Section.vue'
 import AddRow from './AddRow.vue'
@@ -20,6 +22,15 @@ const count = (id: string) => app.s.inventory[id] ?? defaultPairs(id)
 const bump = (id: string, d: number) => {
   app.s.inventory[id] = Math.max(0, Math.min(20, count(id) + d))
 }
+
+const active = computed(() => currentProfile(app.s))
+const names = computed<Record<ProfileId, string>>(() => ({ gym: t.value.pfGym, box: t.value.pfBox, kilos: t.value.pfKilos, home: t.value.pfHome }))
+function pickProfile(id: ProfileId) {
+  const before = snapshot(app.s)
+  applyProfile(app.s, id)
+  toast.show(`${t.value.pfApplied}: ${names.value[id]}`, () => restore(app.s, before))
+}
+const swatch = (p: { value: number; unit: Unit }) => plateLook(p.value, p.unit, { accent: 'var(--accent)', olympic: app.s.olympic, light: false }).bg
 
 function addPlate(value: number, unit: Unit) {
   const kg = toKg(value, unit)
@@ -49,9 +60,17 @@ function removeCustom(id: string) {
 
 <template>
   <Sheet :title="t.inventory" @close="ui.open.inventory = false">
+    <div>
+      <div class="k">{{ t.pfStart }}</div>
+      <div class="profiles hide-scroll">
+        <button v-for="p in PROFILES" :key="p.id" type="button" :class="{ on: active === p.id }" :aria-pressed="active === p.id" @click="pickProfile(p.id)">{{ names[p.id] }}</button>
+      </div>
+      <p class="hint">{{ t.pfHint }}</p>
+    </div>
     <p class="hint">{{ t.invHint }}</p>
     <ul>
       <li v-for="p in rows" :key="p.id" :class="{ zero: count(p.id) === 0 }">
+        <span class="sw" :style="{ background: swatch(p) }" aria-hidden="true" />
         <span class="name"><span class="display">{{ fmtW(p.value, app.s.lang) }}</span> {{ p.unit.toUpperCase() }}</span>
         <button v-if="p.custom" type="button" class="rm" :aria-label="`${t.removeAria} ${p.value} ${p.unit}`" @click="removeCustom(p.id)">×</button>
         <span class="step">
@@ -76,6 +95,41 @@ function removeCustom(id: string) {
   color: var(--muted);
   line-height: 1.3;
 }
+.k {
+  font-size: calc(13px * var(--ts));
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+.profiles {
+  margin: 8px 0;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+.profiles button {
+  flex: none;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 22px;
+  border: 1px solid var(--line2);
+  background: transparent;
+  color: var(--text);
+  font-size: calc(15px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.profiles button.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on);
+}
+.sw {
+  flex: none;
+  width: 8px;
+  height: 30px;
+  border-radius: 3px;
+}
 ul {
   list-style: none;
   margin: 0;
@@ -89,7 +143,7 @@ li {
   align-items: center;
   gap: 8px;
   min-height: 48px;
-  padding: 0 0 0 14px;
+  padding: 0 0 0 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--surface);

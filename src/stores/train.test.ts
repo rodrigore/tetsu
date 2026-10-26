@@ -7,7 +7,7 @@ import { useTrain } from './train'
 import { useUi } from './ui'
 import { alertDone } from '../core/beep'
 
-vi.mock('../core/beep', () => ({ alertDone: vi.fn(), unlockAudio: vi.fn() }))
+vi.mock('../core/beep', () => ({ alertDone: vi.fn(), unlockAudio: vi.fn(), startAudioSession: vi.fn(), stopAudioSession: vi.fn() }))
 
 beforeEach(() => {
   vi.mocked(alertDone).mockClear()
@@ -151,5 +151,20 @@ describe('training session', () => {
     await wait(125_000)
     expect(train.restDone).toBe(true)
     expect(alertDone).not.toHaveBeenCalled()
+  })
+
+  it('restarts the countdown with any length', async () => {
+    const train = useTrain()
+    train.begin()
+    train.complete()
+    await wait(30_000)
+    train.restart(45)
+    expect(train.remaining).toBe(45)
+    expect(train.restTotal).toBe(45)
+    await wait(46_000)
+    expect(train.restDone).toBe(true)
+    train.restart(10)
+    expect(train.restDone).toBe(false)
+    expect(train.remaining).toBe(10)
   })
 })

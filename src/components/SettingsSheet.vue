@@ -26,6 +26,7 @@ const tabs = computed(() => [
   { value: 'general' as const, label: t.value.tabGeneral },
 ])
 
+const layName = computed(() => ({ simple: t.value.laySimple, complete: t.value.layComplete, onehand: t.value.layOne, custom: t.value.layCustom })[s.layout.id])
 const barText = (b: { value: number; unit: string }) => `${fmtW(b.value, s.lang)} ${b.unit.toUpperCase()}`
 
 function addBar(value: number, unit: Unit) {
@@ -53,6 +54,12 @@ function setQuick(i: number, e: Event) {
   const n = parseNumber((e.target as HTMLInputElement).value)
   if (n !== null && n >= 1 && n <= 200) s.quick[i] = n
 }
+function showSteps() {
+  s.steps.hidden = false
+  ui.stepsOpen = true
+  ui.open.settings = false
+  setTimeout(() => document.querySelector('main.screen')?.scrollTo({ top: 0, behavior: 'smooth' }), 0)
+}
 const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
   s[k] = v
 }
@@ -60,6 +67,35 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
 
 <template>
   <Sheet :title="t.settings" @close="ui.open.settings = false">
+    <Section :title="t.setBasic">
+      <div class="basic">
+        <div class="brow">
+          <div class="bt"><span>{{ t.prUnit }}</span><small>{{ t.prUnitHint }}</small></div>
+          <Seg :model-value="s.unit" :options="[{ value: 'kg', label: 'KG' }, { value: 'lb', label: 'LB' }]" @update:model-value="set('unit')($event)" />
+        </div>
+        <button type="button" class="brow link" @click="ui.open.inventory = true">
+          <span class="bt"><span>{{ t.myPlates }}</span><small>{{ t.invHint }}</small></span>
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </button>
+        <div class="brow">
+          <div class="bt"><span>{{ t.awakeTitle }}</span><small>{{ t.awakeHint }}</small></div>
+          <Seg :model-value="s.awake" :options="[{ value: false, label: t.no }, { value: true, label: t.yes }]" @update:model-value="set('awake')($event)" />
+        </div>
+        <div class="brow">
+          <div class="bt"><span>{{ t.language }}</span></div>
+          <Seg :model-value="s.lang" :options="[{ value: 'en', label: 'EN' }, { value: 'es', label: 'ES' }]" @update:model-value="set('lang')($event)" />
+        </div>
+      </div>
+    </Section>
+
+    <Section :title="t.setAdvanced">
+      <button type="button" class="brow link adv" :aria-expanded="ui.advanced" @click="ui.advanced = !ui.advanced">
+        <span class="bt"><span>{{ t.advMore }}</span><small>{{ t.advHint }}</small></span>
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path :d="ui.advanced ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'" /></svg>
+      </button>
+    </Section>
+
+    <template v-if="ui.advanced">
     <Seg v-model="ui.tab.settings" :options="tabs" />
 
     <template v-if="ui.tab.settings === 'display'">
@@ -95,8 +131,8 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
           </button>
         </div>
       </Section>
-      <Section :title="t.style" :hint="s.look === 'full' ? t.styleHintFull : t.styleHintMin">
-        <Seg :model-value="s.look" :options="[{ value: 'full', label: t.full }, { value: 'minimal', label: t.minimal }]" @update:model-value="set('look')($event)" />
+      <Section :title="t.layTitle" :hint="t.layLandscape">
+        <button type="button" class="wide" @click="ui.open.layout = true">{{ t.layCurrent }}: {{ layName }}</button>
       </Section>
       <Section :title="t.textSize">
         <Seg :model-value="s.tsize" :options="[{ value: 'normal', label: t.normal }, { value: 'large', label: t.large }]" @update:model-value="set('tsize')($event)" />
@@ -113,9 +149,6 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
       </Section>
       <Section :title="t.plateColors" :hint="t.pcolHint">
         <Seg :model-value="s.olympic" :options="[{ value: false, label: t.byUnit }, { value: true, label: t.olympic }]" @update:model-value="set('olympic')($event)" />
-      </Section>
-      <Section :title="t.oneHandTitle" :hint="t.oneHandHint">
-        <Seg :model-value="s.oneHand" :options="[{ value: false, label: t.no }, { value: true, label: t.yes }]" @update:model-value="set('oneHand')($event)" />
       </Section>
       <Section :title="t.orientTitle" :hint="t.orientHint">
         <Seg :model-value="s.porient" :options="[{ value: 'vertical', label: t.vertical }, { value: 'horizontal', label: t.horizontal }]" @update:model-value="set('porient')($event)" />
@@ -152,20 +185,8 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
     </template>
 
     <template v-else>
-      <Section :title="t.guideBtn">
-        <button type="button" class="wide" @click="ui.open.settings = false; ui.open.guide = 1">{{ t.guideBtn }}</button>
-      </Section>
       <Section :title="t.liftsTitle" :hint="t.liftsHint">
         <button type="button" class="wide" @click="ui.open.lifts = true">{{ t.liftsTitle }}</button>
-      </Section>
-      <Section :title="t.awakeTitle" :hint="t.awakeHint">
-        <Seg :model-value="s.awake" :options="[{ value: false, label: t.no }, { value: true, label: t.yes }]" @update:model-value="set('awake')($event)" />
-      </Section>
-      <Section :title="t.language">
-        <Seg :model-value="s.lang" :options="[{ value: 'en', label: 'ENGLISH' }, { value: 'es', label: 'ESPAÑOL' }]" @update:model-value="set('lang')($event)" />
-      </Section>
-      <Section :title="t.prUnit" :hint="t.prUnitHint">
-        <Seg :model-value="s.unit" :options="[{ value: 'kg', label: 'KG' }, { value: 'lb', label: 'LB' }]" @update:model-value="set('unit')($event)" />
       </Section>
       <Section :title="t.pctStepTitle">
         <Seg :model-value="s.pstep" :options="[1, 2.5, 5].map((v) => ({ value: v, label: fmt(v, s.lang) + '%' }))" @update:model-value="set('pstep')($event)" />
@@ -180,10 +201,67 @@ const set = <K extends keyof Settings>(k: K) => (v: Settings[K]) => {
         <button type="button" class="wide" @click="s.quick = [60, 70, 80, 90, 95, 100]">{{ t.reset }}</button>
       </Section>
     </template>
+    </template>
+
+    <Section :title="t.setHelp">
+      <div class="basic">
+        <button type="button" class="brow link" @click="ui.open.settings = false; ui.open.guide = 1">
+          <span class="bt"><span>{{ t.guideBtn }}</span></span>
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </button>
+        <button type="button" class="brow link" @click="showSteps">
+          <span class="bt"><span>{{ t.stReopen }}</span><small>{{ t.stReopenH }}</small></span>
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </button>
+      </div>
+    </Section>
   </Sheet>
 </template>
 
 <style scoped>
+.basic {
+  display: flex;
+  flex-direction: column;
+}
+.brow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 64px;
+  padding: 8px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+.brow.link {
+  width: 100%;
+}
+.brow.adv {
+  border-bottom: 1px solid var(--line);
+}
+.bt {
+  flex: 1;
+  min-width: 0;
+}
+.bt > span {
+  display: block;
+  font-size: calc(19px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+.bt small {
+  display: block;
+  margin-top: 2px;
+  font-size: calc(14px * var(--ts));
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  line-height: 1.2;
+}
 .pal {
   display: flex;
   flex-wrap: wrap;

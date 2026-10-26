@@ -3,8 +3,10 @@ import { defineStore } from 'pinia'
 import { computed, reactive, watch } from 'vue'
 import type { Lang } from '../core/i18n'
 import type { Formula } from '../core/oneRm'
+import { DEFAULT_SOUND } from '../core/sounds'
 import { PLAN_TEMPLATES, type PlanSet } from '../core/plan'
 import type { RoundMode } from '../core/solver'
+import { defaultCustom, fromLegacy, type LayoutSetting } from '../core/layout'
 import type { Unit } from '../core/units'
 
 export interface Lift {
@@ -23,7 +25,7 @@ export interface Bar {
 }
 
 export const PRESET_KEYS = [
-  'look', 'hero', 'side', 'oneHand', 'tsize', 'contrast', 'theme', 'olympic', 'porient', 'showDiff', 'awake',
+  'layout', 'hero', 'side', 'tsize', 'contrast', 'theme', 'olympic', 'porient', 'showDiff', 'awake',
 ] as const
 
 export interface Preset {
@@ -40,6 +42,8 @@ export interface Settings {
   theme: 'auto' | 'dark' | 'light'
   accent: string
   look: 'full' | 'minimal'
+  /** Which blocks the main screen shows and in what order. */
+  layout: LayoutSetting
   hero: 'side' | 'target' | 'total'
   side: 'kg' | 'lb' | 'both'
   round: RoundMode
@@ -75,7 +79,11 @@ export interface Settings {
   /** Formula for the PR estimate from reps. */
   e1rm: Formula
   /** Training: the sets (percentage and reps) and how the rest between them behaves. */
-  plan: { sets: PlanSet[]; rest: number; auto: boolean; sound: boolean }
+  plan: { sets: PlanSet[]; rest: number; auto: boolean; sound: boolean; tone: string }
+  /** Getting-started checklist: hidden once done or dismissed; the rest are steps the app cannot detect by itself. */
+  steps: { hidden: boolean; where: boolean; warm: boolean; install: boolean }
+  /** One-time tips the person has already closed. */
+  tips: Record<string, boolean>
 }
 
 const KEY = 'tetsu:v1'
@@ -86,6 +94,7 @@ const defaults = (): Settings => ({
   theme: 'dark',
   accent: '#FF5A1F',
   look: 'minimal',
+  layout: { id: 'simple', custom: defaultCustom() },
   hero: 'side',
   side: 'both',
   round: 'near',
@@ -118,11 +127,11 @@ const defaults = (): Settings => ({
   presets: [
     {
       id: 'gym', seed: true, name: { es: 'GIMNASIO', en: 'GYM' },
-      vals: { look: 'minimal', hero: 'side', oneHand: false, tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: false, awake: true },
+      vals: { layout: { id: 'simple', custom: defaultCustom() }, hero: 'side', tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: false, awake: true },
     },
     {
       id: 'box', seed: true, name: { es: 'BOX', en: 'BOX' },
-      vals: { look: 'minimal', hero: 'target', oneHand: true, tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: true, awake: true },
+      vals: { layout: { id: 'onehand', custom: defaultCustom() }, hero: 'target', tsize: 'large', contrast: 'high', porient: 'horizontal', showDiff: true, awake: true },
     },
   ],
   presetId: null,
@@ -133,7 +142,9 @@ const defaults = (): Settings => ({
   installDismissed: false,
   share: defaultShare(),
   e1rm: 'epley',
-  plan: { sets: PLAN_TEMPLATES[0]!.sets.map((x) => ({ ...x })), rest: 120, auto: true, sound: true },
+  plan: { sets: PLAN_TEMPLATES[0]!.sets.map((x) => ({ ...x })), rest: 120, auto: true, sound: true, tone: DEFAULT_SOUND },
+  steps: { hidden: false, where: false, warm: false, install: false },
+  tips: {},
 })
 
 function load(): Settings {
@@ -145,12 +156,16 @@ function load(): Settings {
       // Factory presets always come from the app, so improvements reach existing installs;
       // the ones the user saved are kept as they are.
       const own = (saved.presets ?? []).filter((p) => !p.seed)
-      const merged = { ...base, ...saved, share: { ...base.share, ...saved.share }, plan: { ...base.plan, ...saved.plan }, presets: [...base.presets, ...own] }
+      const merged = { ...base, ...saved, share: { ...base.share, ...saved.share }, plan: { ...base.plan, ...saved.plan }, steps: { ...base.steps, ...saved.steps }, tips: { ...saved.tips }, presets: [...base.presets, ...own] }
       // v2: the minimal view became the default. Applied once, then your own choice sticks.
       if ((saved.schema ?? 1) < 2) {
         merged.look = 'minimal'
         merged.schema = 2
       }
+      // Layouts are new: keep what the screen looked like until now.
+      if (!saved.layout) merged.layout = fromLegacy(merged.look, merged.oneHand)
+      // Someone who already finished the old guide does not get the checklist.
+      if (!saved.steps && saved.guideDone) merged.steps.hidden = true
       return merged
     }
   } catch {

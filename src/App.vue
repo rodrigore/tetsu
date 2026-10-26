@@ -23,12 +23,21 @@ import ManualSheet from './components/ManualSheet.vue'
 import PlanSheet from './components/PlanSheet.vue'
 import TrainSheet from './components/TrainSheet.vue'
 import RoundAlt from './components/RoundAlt.vue'
+import TabBar from './components/TabBar.vue'
+import StepsCard from './components/StepsCard.vue'
+import TipCard from './components/TipCard.vue'
+import LayoutSheet from './components/LayoutSheet.vue'
+import LayoutEditor from './components/LayoutEditor.vue'
+import OnboardingSheet from './components/OnboardingSheet.vue'
 import { useTrain } from './stores/train'
 import Toast from './components/Toast.vue'
 import InstallHint from './components/InstallHint.vue'
 import { useToast } from './stores/toast'
 import GuideSheet from './components/GuideSheet.vue'
+import { focusPr } from './core/focusPr'
 import { useWakeLock } from './core/useWakeLock'
+import { HERO_SCALE, landscapePlacement, placement, resolve, type BlockId } from './core/layout'
+import { LANDSCAPE_PHONE, useMq } from './core/useMq'
 
 const app = useApp()
 const ui = useUi()
@@ -55,12 +64,20 @@ watchEffect(() => {
 })
 
 useWakeLock(computed(() => app.s.awake || train.active))
-if (!app.s.guideDone) ui.open.guide = 1
+if (!app.s.guideDone) ui.open.onboarding = true
 
 const { t, used, looks, chips, hero, targetKg, result, diffText, exact, notice, plateInfo, shareMessage } = useLoad(() => isLight.value)
-const full = computed(() => app.s.look === 'full')
+const landscape = useMq(LANDSCAPE_PHONE)
+const resolved = computed(() => resolve(app.s.layout))
+const place = computed(() => (landscape.value ? landscapePlacement() : placement(resolved.value)))
+const show = (b: BlockId) => place.value[b].show
+// Rank 1..7 times 10 leaves room for the pieces that stay glued to a block (actions, rounding, tip).
+const at = (b: BlockId, n = 0) => ({ order: place.value[b].rank * 10 + n })
+const heroScale = computed(() => HERO_SCALE[resolved.value.size])
 // A rounding picked for one target does not carry over to the next.
 watch(targetKg, () => (ui.roundPick = null))
+
+const showExample = computed(() => app.s.guideDone && app.s.steps.hidden && app.lift.example)
 
 // Native share sheet where it exists (iPhone), clipboard otherwise.
 async function share() {
@@ -83,21 +100,31 @@ async function share() {
 </script>
 
 <template>
-  <main class="screen" :class="{ 'one-hand': app.s.oneHand }">
+  <main class="screen">
     <div class="col-left">
-      <BarPicker class="o-header" />
-      <LiftTabs class="o-lifts" />
-      <PrField class="o-pr" />
+      <BarPicker v-if="show('head')" class="o-header" :style="at('head')" />
+      <LiftTabs v-if="show('head')" class="o-lifts" :style="at('head', 1)" />
+      <PrField v-if="show('pr')" class="o-pr" :style="at('pr')" />
     </div>
-    <HeroValue class="o-hero" :hero="hero" :notice="notice" />
-    <BarView class="o-bar" :used="used" :looks="looks" />
-    <ChangeStrip class="o-actions" :used="used" :info="plateInfo" @share="ui.open.share = true" />
-    <RoundAlt class="o-round" />
-    <PlateChips v-if="full" class="o-chips" :chips="chips" :empty="used.length === 0" :empty-text="t.emptyBar" />
-    <StatsStrip v-if="full" class="o-stats" :t="t" :target-kg="targetKg" :total-kg="result.totalKg" :diff-text="diffText" :exact="exact" />
-    <PctControl class="o-pct" />
+    <StepsCard class="o-steps" />
+    <HeroValue v-if="show('hero')" class="o-hero" :style="at('hero')" :hero="hero" :notice="notice" :full="show('stats') || show('chips')" :scale="heroScale" />
+    <BarView class="o-bar" :style="at('bar')" :used="used" :looks="looks" />
+    <TipCard class="o-tip" :style="at('bar', 1)" id="plates" :title="t.tipPlates" :text="t.tipPlatesD" :show="app.s.guideDone && used.length > 1" />
+    <ChangeStrip class="o-actions" :style="at('bar', 2)" :used="used" :info="plateInfo" @share="ui.open.share = true" />
+    <RoundAlt class="o-round" :style="at('bar', 3)" />
+    <PlateChips v-if="show('chips')" class="o-chips" :style="at('chips')" :chips="chips" :empty="used.length === 0" :empty-text="t.emptyBar" />
+    <StatsStrip v-if="show('stats')" class="o-stats" :style="at('stats')" :t="t" :target-kg="targetKg" :total-kg="result.totalKg" :diff-text="diffText" :exact="exact" />
+    <PctControl v-if="show('pct')" class="o-pct" :style="at('pct')" :full="show('stats')" />
+    <div v-if="showExample" class="o-example">
+      <span>{{ t.exBanner }}</span>
+      <button type="button" @click="focusPr">{{ t.exStart }}</button>
+    </div>
   </main>
+  <TabBar :used="used" />
+  <OnboardingSheet v-if="ui.open.onboarding" />
   <SettingsSheet v-if="ui.open.settings" />
+  <LayoutSheet v-if="ui.open.layout" />
+  <LayoutEditor v-if="ui.open.layoutEdit" />
   <InventorySheet v-if="ui.open.inventory" />
   <LiftsSheet v-if="ui.open.lifts" />
   <WarmupSheet v-if="ui.open.warmup" />
@@ -118,7 +145,7 @@ async function share() {
   max-width: 480px;
   height: 100dvh;
   margin: 0 auto;
-  padding: max(20px, env(safe-area-inset-top)) 24px max(22px, env(safe-area-inset-bottom));
+  padding: max(20px, env(safe-area-inset-top)) 24px calc(150px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -129,7 +156,7 @@ async function share() {
   .screen {
     gap: 8px;
     padding-top: max(12px, env(safe-area-inset-top));
-    padding-bottom: max(14px, env(safe-area-inset-bottom));
+    padding-bottom: calc(144px + env(safe-area-inset-bottom));
   }
 }
 .screen > :deep(*),
@@ -139,28 +166,38 @@ async function share() {
 .col-left {
   display: contents;
 }
-.o-header { order: 0; }
-.o-lifts { order: 1; }
-.o-pr { order: 2; }
-.o-hero { order: 3; }
-.o-bar { order: 4; }
-.o-actions { order: 5; }
-.o-round { order: 5; }
-.o-chips { order: 6; }
-.o-stats { order: 7; }
-.o-pct { order: 8; }
-/* One-hand: results on top, selectors near the thumb. */
-.one-hand .o-hero { order: 0; }
-.one-hand .o-bar { order: 1; }
-.one-hand .o-actions { order: 2; }
-.one-hand .o-round { order: 2; }
-.one-hand .o-chips { order: 3; }
-.one-hand .o-stats { order: 4; }
-.one-hand .o-header { order: 5; }
-.one-hand .o-lifts { order: 6; }
-.one-hand .o-pr { order: 7; }
+.o-steps { order: -1; }
+.o-example { order: 999; }
 .screen > :deep(.wrap) {
   flex: 1 1 auto;
+}
+
+.o-example {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px dashed var(--line2);
+  font-size: calc(17px * var(--ts));
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.25;
+}
+.o-example span {
+  flex: 1;
+}
+.o-example button {
+  flex: none;
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--on);
+  font-size: calc(15px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.1em;
 }
 
 /* Phone on its side: three columns on top, the bar across the full width below. */
@@ -175,6 +212,9 @@ async function share() {
     row-gap: 6px;
     padding: max(12px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 12px max(20px, env(safe-area-inset-left));
   }
+  .screen > :deep(.o-steps),
+  .screen > :deep(.o-tip),
+  .screen > :deep(.o-example) { display: none; }
   .col-left {
     grid-column: 1;
     grid-row: 1;
@@ -183,10 +223,10 @@ async function share() {
     gap: 8px;
     min-width: 0;
   }
-  .screen > :deep(.o-hero) { grid-column: 2; grid-row: 1; order: 0; min-width: 0; }
-  .screen > :deep(.o-pct) { grid-column: 3; grid-row: 1; order: 0; min-width: 0; }
-  .screen > :deep(.o-bar) { grid-column: 1 / -1; grid-row: 2; order: 0; min-height: 0; }
-  .screen > :deep(.o-chips) { grid-column: 1 / -1; grid-row: 3; order: 0; }
+  .screen > :deep(.o-hero) { grid-column: 2; grid-row: 1; order: 0 !important; min-width: 0; }
+  .screen > :deep(.o-pct) { grid-column: 3; grid-row: 1; order: 0 !important; min-width: 0; }
+  .screen > :deep(.o-bar) { grid-column: 1 / -1; grid-row: 2; order: 0 !important; min-height: 0; }
+  .screen > :deep(.o-chips) { grid-column: 1 / -1; grid-row: 3; order: 0 !important; }
   .col-left > :deep(*) { order: 0 !important; }
   .screen :deep(.hint) { display: none; }
   .screen > :deep(.o-stats) { display: none; }

@@ -6,10 +6,11 @@ import { useTrain } from '../stores/train'
 import { fmt } from '../core/format'
 import { messages } from '../core/i18n'
 import { activeTemplate, clampPct, clampReps, MAX_SETS, nextSet, PLAN_TEMPLATES, planSteps } from '../core/plan'
-import { clampRest, clock, REST_STEP } from '../core/rest'
 import { useLoad } from '../core/useLoad'
 import { fromKg, parseNumber } from '../core/units'
 import { selectAll } from '../core/selectAll'
+import RestField from './RestField.vue'
+import SoundField from './SoundField.vue'
 import Sheet from './Sheet.vue'
 
 const app = useApp()
@@ -45,7 +46,6 @@ const add = () => {
   if (sets.value.length < MAX_SETS) app.s.plan.sets.push(nextSet(sets.value))
 }
 const remove = (i: number) => app.s.plan.sets.splice(i, 1)
-const rest = (d: number) => (app.s.plan.rest = clampRest(app.s.plan.rest + d))
 </script>
 
 <template>
@@ -54,6 +54,12 @@ const rest = (d: number) => (app.s.plan.rest = clampRest(app.s.plan.rest + d))
       <div><span class="k">{{ t.trLift }}</span><div class="lift">{{ app.liftName(app.lift) }}</div></div>
       <div class="pr"><span class="k">PR</span><div class="lift">{{ fmt(fromKg(app.lift.kg, app.s.unit), app.s.lang) }} <small>{{ U }}</small></div></div>
     </div>
+
+    <section v-if="sets.length === 0" class="empty">
+      <div class="eh">{{ t.emPlanT }}</div>
+      <p>{{ t.emPlanD }}</p>
+      <button type="button" @click="pickTemplate(PLAN_TEMPLATES[0]!.id)">{{ t.emPlanBtn }}</button>
+    </section>
 
     <div>
       <span class="k">{{ t.trTemplate }}</span>
@@ -84,11 +90,7 @@ const rest = (d: number) => (app.s.plan.rest = clampRest(app.s.plan.rest + d))
 
     <div class="rest">
       <div class="lbl">{{ t.trRest }}<small>{{ t.trRestHint }}</small></div>
-      <div class="step">
-        <button type="button" :aria-label="t.trRestLess" @click="rest(-REST_STEP)">−</button>
-        <output class="display">{{ clock(app.s.plan.rest) }}</output>
-        <button type="button" :aria-label="t.trRestMore" @click="rest(REST_STEP)">+</button>
-      </div>
+      <RestField v-model="app.s.plan.rest" />
     </div>
     <div class="tg">
       <span>{{ t.trAuto }}</span>
@@ -98,6 +100,7 @@ const rest = (d: number) => (app.s.plan.rest = clampRest(app.s.plan.rest + d))
       <span>{{ t.trSound }}</span>
       <button type="button" role="switch" :aria-checked="app.s.plan.sound" :aria-label="t.trSound" :class="{ on: app.s.plan.sound }" @click="app.s.plan.sound = !app.s.plan.sound"><i /></button>
     </div>
+    <SoundField />
 
     <button type="button" class="go" :disabled="!sets.length" @click="train.begin()">{{ t.trStart }}</button>
   </Sheet>
@@ -126,12 +129,9 @@ li:last-child { border-bottom: 1px solid var(--line); }
 .sum { font-size: calc(16px * var(--ts)); font-weight: 600; letter-spacing: 0.04em; color: var(--muted); }
 .add { flex: none; height: 44px; padding: 0 4px; border: 0; background: transparent; color: var(--accent); font-size: calc(16px * var(--ts)); font-weight: 700; letter-spacing: 0.06em; }
 .add:disabled { color: var(--muted); }
-.rest { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 6px 0; border-top: 1px solid var(--line); }
+.rest { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
 .lbl { font-size: calc(19px * var(--ts)); font-weight: 600; letter-spacing: 0.04em; line-height: 1.15; }
 .lbl small { display: block; font-size: calc(14px * var(--ts)); font-weight: 500; color: var(--muted); letter-spacing: 0.02em; }
-.step { flex: none; display: flex; align-items: center; gap: 6px; }
-.step button { width: 44px; height: 44px; border-radius: 8px; border: 1px solid var(--line2); background: var(--surface); color: var(--text); font-size: 24px; }
-.step output { width: 58px; text-align: center; font-size: 26px; }
 .tg { display: flex; align-items: center; justify-content: space-between; min-height: 48px; font-size: calc(18px * var(--ts)); font-weight: 600; letter-spacing: 0.04em; }
 .tg button { flex: none; width: 52px; height: 30px; padding: 0; border-radius: 15px; border: 1px solid var(--line2); background: var(--surface); position: relative; }
 .tg button i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 11px; background: var(--muted); transition: transform 0.15s; }
@@ -139,4 +139,35 @@ li:last-child { border-bottom: 1px solid var(--line); }
 .tg button.on i { background: var(--on); transform: translateX(22px); }
 .go { height: 56px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on); font-size: calc(19px * var(--ts)); font-weight: 700; letter-spacing: 0.08em; }
 .go:disabled { opacity: 0.4; }
+.empty {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+  background: var(--surface);
+}
+.eh {
+  font-size: calc(23px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+.empty p {
+  margin: 4px 0 0;
+  font-size: calc(17px * var(--ts));
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.3;
+}
+.empty button {
+  margin-top: 12px;
+  height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on);
+  font-size: calc(16px * var(--ts));
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
 </style>

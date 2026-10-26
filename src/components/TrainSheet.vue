@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useApp } from '../stores/app'
 import { useTrain } from '../stores/train'
 import { diffPlates } from '../core/delta'
@@ -9,6 +9,8 @@ import { idsOf, planSteps } from '../core/plan'
 import { clock, REST_STEP, ringFraction } from '../core/rest'
 import { fromKg } from '../core/units'
 import { looksOf, usedOf, useLoad } from '../core/useLoad'
+import SoundField from './SoundField.vue'
+import TimeWheelSheet from './TimeWheelSheet.vue'
 import BarView from './BarView.vue'
 import PlateChips from './PlateChips.vue'
 
@@ -58,6 +60,12 @@ const same = (d: ReturnType<typeof diffFrom>) => !!d && !d.add.length && !d.remo
 
 const ring = 2 * Math.PI * 118
 const offset = computed(() => ring * (1 - ringFraction(train.remaining, train.restTotal)))
+const editing = ref(false)
+const edit = ref(60)
+const openEdit = () => {
+  edit.value = Math.max(5, train.remaining || train.restTotal)
+  editing.value = true
+}
 const mainLabel = computed(() => (train.last ? t.value.trDoneLast : app.s.plan.auto ? t.value.trDoneRest : t.value.trDoneNext))
 </script>
 
@@ -94,6 +102,7 @@ const mainLabel = computed(() => (train.last ? t.value.trDoneLast : app.s.plan.a
         <PlateChips :chips="chips" :empty="used.length === 0" :empty-text="t.emptyBar" />
 
         <div class="sp" />
+        <p class="info">{{ app.s.plan.auto ? t.trRestInfoAuto : t.trRestInfoManual }} <b>{{ clock(app.s.plan.rest) }}</b></p>
         <div v-if="nxt" class="nx"><span>{{ t.trNext }} · {{ f(nxt.pct) }} % × {{ nxt.reps }}</span><b>{{ kg(nxt.result.totalKg) }} {{ U }}</b></div>
         <div class="btns">
           <button type="button" class="sq" :disabled="i === 0" :aria-label="t.trPrevAria" @click="train.prev()">
@@ -126,8 +135,10 @@ const mainLabel = computed(() => (train.last ? t.value.trDoneLast : app.s.plan.a
         <div class="adj">
           <button type="button" @click="train.adjust(-REST_STEP)">{{ t.trMinus15 }}</button>
           <button type="button" @click="train.adjust(REST_STEP)">{{ t.trPlus15 }}</button>
+          <button type="button" :class="{ on: editing }" @click="openEdit">{{ t.trAdjust }}</button>
           <button type="button" class="strong" @click="train.next()">{{ t.trSkip }}</button>
         </div>
+        <TimeWheelSheet v-if="editing" v-model="edit" :title="t.trAdjust" :cta="t.trApply" @update:model-value="train.restart($event)" @close="editing = false" />
 
         <div v-if="nxt" class="card">
           <div class="k">{{ t.trNext }} · {{ t.trSet }} {{ i + 2 }}</div>
@@ -144,6 +155,7 @@ const mainLabel = computed(() => (train.last ? t.value.trDoneLast : app.s.plan.a
           <span>{{ t.trSoundOn }}</span>
           <button type="button" role="switch" :aria-checked="app.s.plan.sound" :aria-label="t.trSoundOn" :class="{ on: app.s.plan.sound }" @click="app.s.plan.sound = !app.s.plan.sound"><i /></button>
         </div>
+        <SoundField />
         <div class="sp" />
         <button type="button" class="main full" :class="{ pulse: train.restDone }" @click="train.next()">{{ t.trGoSet }} {{ i + 2 }}</button>
       </template>
@@ -193,7 +205,10 @@ header { display: flex; align-items: center; justify-content: space-between; }
 .ringbox svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
 .mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .time { font-family: 'Anton', sans-serif; font-size: 92px; line-height: 0.9; }
-.adj { display: flex; justify-content: center; gap: 8px; }
+.adj { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.adj .on { border-color: var(--accent); color: var(--text); }
+.info { margin: 0; font-size: calc(15px * var(--ts)); font-weight: 500; letter-spacing: 0.02em; color: var(--muted); }
+.info b { color: var(--text); letter-spacing: 0.06em; }
 .adj button { height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid var(--line2); background: transparent; color: var(--muted); font-size: calc(17px * var(--ts)); font-weight: 700; letter-spacing: 0.04em; }
 .adj .strong { color: var(--text); }
 .card { padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import { alertDone, unlockAudio } from '../core/beep'
+import { alertDone, startAudioSession, stopAudioSession, unlockAudio } from '../core/beep'
 import { messages } from '../core/i18n'
 import { remainingSec } from '../core/rest'
 import { useApp } from './app'
@@ -31,7 +31,7 @@ export const useTrain = defineStore('train', () => {
     now.value = Date.now()
     if (phase.value === 'rest' && !restDone.value && remainingSec(restEnd.value, now.value) === 0) {
       restDone.value = true
-      if (app.s.plan.sound) alertDone()
+      if (app.s.plan.sound) alertDone(app.s.plan.tone)
     }
   }
   watch(phase, (p) => {
@@ -48,6 +48,7 @@ export const useTrain = defineStore('train', () => {
   function begin() {
     if (count.value === 0) return
     unlockAudio()
+    startAudioSession()
     idx.value = 0
     phase.value = 'set'
     ui.open.plan = false
@@ -61,6 +62,7 @@ export const useTrain = defineStore('train', () => {
     phase.value = 'rest'
   }
   function finish(announce = true) {
+    if (phase.value !== 'off') stopAudioSession()
     phase.value = 'off'
     idx.value = 0
     if (announce) toast.show(messages(app.s.lang).trWorkoutDone)
@@ -81,6 +83,14 @@ export const useTrain = defineStore('train', () => {
     if (idx.value > 0) idx.value--
     phase.value = 'set'
   }
+  /** A new countdown of `sec` seconds, whatever was left. */
+  function restart(sec: number) {
+    unlockAudio()
+    tick()
+    restTotal.value = sec
+    restEnd.value = now.value + sec * 1000
+    restDone.value = false
+  }
   /** +/- seconds on the running rest; once it has ended a bump starts a new countdown. */
   function adjust(sec: number) {
     tick()
@@ -95,5 +105,5 @@ export const useTrain = defineStore('train', () => {
     restTotal.value = Math.max(restTotal.value, remainingSec(restEnd.value, now.value))
   }
 
-  return { phase, idx, active, count, last, remaining, restTotal, restDone, begin, startRest, complete, next, prev, adjust, finish }
+  return { phase, idx, active, count, last, remaining, restTotal, restDone, begin, startRest, complete, next, prev, adjust, restart, finish }
 })
