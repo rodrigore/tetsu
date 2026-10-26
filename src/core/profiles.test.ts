@@ -11,7 +11,12 @@ describe('profiles', () => {
       expect(Object.keys(inv).sort()).toEqual(CATALOG.map(plateId).sort())
     }
     expect(profileInventory(profileOf('gym'))['25kg']).toBe(0)
-    expect(profileInventory(profileOf('box'))['20kg']).toBe(2)
+    // Box: big plates in pounds, small ones in kilos.
+    const box = profileInventory(profileOf('box'))
+    expect(box['45lb']).toBeGreaterThan(0)
+    expect(box['25kg']).toBe(0)
+    expect(box['2.5kg']).toBeGreaterThan(0)
+    expect(box['0.5kg']).toBeGreaterThan(0)
   })
 
   it('applies bars, unit, inventory and keeps custom plates', () => {
